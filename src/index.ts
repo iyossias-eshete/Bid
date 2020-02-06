@@ -33,7 +33,7 @@ const books = [
     },
   };
 
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer({ typeDefs : './src/schema/schema.graphql', resolvers });
 
 // The `listen` method launches a web server.
 server.listen().then(({ url }) => {

@@ -21,10 +21,10 @@ var resolvers = {
         books: function () { return books; },
     },
 };
-var server = new apollo_server_1.ApolloServer({ typeDefs: typeDefs, resolvers: resolvers });
+var server = new apollo_server_1.ApolloServer({ typeDefs: './src/schema/schema.graphql', resolvers: resolvers });
 // The `listen` method launches a web server.
 server.listen().then(function (_a) {
     var url = _a.url;
-    console.log("\uD83D\uDE80  Server ready at " + url);
+    console.log("\uD83D\uDE80 Server ready at " + url);
 });
 var templateObject_1;
