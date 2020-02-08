@@ -20,19 +20,7 @@ interface authenticatedUserType{
   token : string
 };
 
-interface testType{
-  value1: string,
-  value2: number
-}
-// const userType = {
-//   id: String,
-//   email: String,
-//   firstName: String,
-//   lastName : String,
-//   password: String,
-//   accountNumber : Number,
-//   sex : String
-// }
+
 
 const typeDefs = gql`
   enum Sex{
@@ -55,11 +43,6 @@ const typeDefs = gql`
     token : String
   }
   
-  type testTypeQ{
-    value1 :String
-    value2 : Int
-  }
-
    type Query {
     
     users: [User]
@@ -68,11 +51,12 @@ const typeDefs = gql`
   type Mutation{
     register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : authenticatedUser
     signIn(email: String!, password: String!) : authenticatedUser  
-    testMut(sex: String!) : testTypeQ
-    #testMut(value1: String!, value2: Int!) : testTypeQ
   }
 `;
 
+const accouts = [{
+
+}];
 
   const users = [
     {
@@ -147,10 +131,6 @@ const typeDefs = gql`
          // console.log('Done')
           
           let authenticatedUserData : authenticatedUserType = await registerUser(newUser);
-
-          //Remove:
-          console.log(authenticatedUserData);
-
           return authenticatedUserData;
       },
       signIn: async (email : string, password: string )=>{
