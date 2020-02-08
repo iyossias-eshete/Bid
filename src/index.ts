@@ -27,6 +27,14 @@ interface accountType {
   amount: number
 }
 
+interface bidType{
+  id: number,
+  name: string,
+  description: string,
+  startingPrice : number,
+  creatorId : number
+}
+
 
 
 const typeDefs = gql`
@@ -59,18 +67,33 @@ type Account{
   amount: Int!
 }
 
+
+
+type Bid{
+  id: Int!
+  name: String!
+  description: String!
+  startingPrice : Float
+  creatorId : Int
+}
+
    type Query {
     
     users: [User]
     accounts: [Account]
+    bids: [Bid]
+    myBid: [Bid] #TODO: bids I've created
+    bidding: [Bid] #TODO: ones I've bid on
   }
 
   type Mutation{
     register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser
-    signIn(email: String!, password: String!) : AuthenticatedUser  
+    signIn(email: String!, password: String!) : AuthenticatedUser
+    createBid(name: String!, description: String!, startingPrice: Float!) : Bid  #TODO: CreateBid resolver
   }
 `;
 
+//data source
 const accounts = [
   {
     accountNumber: 1,
@@ -135,6 +158,39 @@ const users = [
 
 ];
 
+const bids = [
+  {
+    id: 1,
+    name: 'Paradise',
+    description: 'By Micheal Angelo. High quality imitation',
+    startingPrice: 100000,
+    creatorId: 1,
+  },
+  {
+    id: 2,
+    name: 'Jackson Gloves',
+    description: 'Micheal Jackson\'s original gold gloves.',
+    startingPrice: 5000000,
+    creatorId: 3,
+  },
+  {
+    id: 3,
+    name: 'The Medievals',
+    description: 'Poems collections from various ancient literates.',
+    startingPrice: 30000,
+    creatorId: 2,
+  },
+  {
+    id: 4,
+    name: 'The Mac',
+    description: '1974 Apple laptop. Still stunning.',
+    startingPrice: 2000,
+    creatorId: 4,
+  },
+
+
+];
+
 const registerUser = async (user: userType) => {
   //TODO: check for unique email
 
@@ -170,7 +226,8 @@ const registerUser = async (user: userType) => {
 
 const resolvers: IResolvers = {
   Query: {
-    users: () => users
+    users: () => users,
+    bids: () => bids
   },
 
   Mutation: {
@@ -184,6 +241,7 @@ const resolvers: IResolvers = {
       let AuthenticatedUserData: authenticatedUserType = await registerUser(newUser);
       return AuthenticatedUserData;
     },
+    //TODO: do signIn
     signIn: async (email: string, password: string) => {
       const user: userType = { id: -1, accountNumber: 1, email: 'pspd@gmail.com', firstName: 'James', lastName: 'Grechen', password: 'ppp', sex: 'Male' };
       return { user, token: '' };

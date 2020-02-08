@@ -49,16 +49,34 @@ var bcryptjs_1 = __importDefault(require("bcryptjs"));
 var SECRET = 'SECRET';
 ;
 ;
-// const userType = {
-//   id: String,
-//   email: String,
-//   firstName: String,
-//   lastName : String,
-//   password: String,
-//   accountNumber : Number,
-//   sex : String
-// }
-var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  enum Sex{\n    Male\n    Female\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type authenticatedUser{\n    user :User\n    token : String\n  }\n  \n  type testTypeQ{\n    value1 :String\n    value2 : Int\n  }\n\n   type Query {\n    \n    users: [User]\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : authenticatedUser\n    signIn(email: String!, password: String!) : authenticatedUser  \n    testMut(sex: String!) : testTypeQ\n    #testMut(value1: String!, value2: Int!) : testTypeQ\n  }\n"], ["\n  enum Sex{\n    Male\n    Female\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type authenticatedUser{\n    user :User\n    token : String\n  }\n  \n  type testTypeQ{\n    value1 :String\n    value2 : Int\n  }\n\n   type Query {\n    \n    users: [User]\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : authenticatedUser\n    signIn(email: String!, password: String!) : authenticatedUser  \n    testMut(sex: String!) : testTypeQ\n    #testMut(value1: String!, value2: Int!) : testTypeQ\n  }\n"])));
+var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  enum Sex{\n    Male\n    Female\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int!\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #bids I've created\n    bidding: [Bid] #ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float!) : Bid  \n  }\n"], ["\n  enum Sex{\n    Male\n    Female\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int!\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #bids I've created\n    bidding: [Bid] #ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float!) : Bid  \n  }\n"])));
+//data source
+var accounts = [
+    {
+        accountNumber: 1,
+        accountHolderFirstName: 'Leroy',
+        accountHolderLastName: 'Sane',
+        amount: 500000
+    },
+    {
+        accountNumber: 2,
+        accountHolderFirstName: 'Thomas',
+        accountHolderLastName: 'Tukils',
+        amount: 2500000
+    },
+    {
+        accountNumber: 2,
+        accountHolderFirstName: 'Collins',
+        accountHolderLastName: 'Muller',
+        amount: 2500
+    },
+    {
+        accountNumber: 2,
+        accountHolderFirstName: 'Ben',
+        accountHolderLastName: 'Orlando',
+        amount: 1000
+    }
+];
 var users = [
     {
         id: 1,
@@ -93,8 +111,38 @@ var users = [
         sex: "Female"
     },
 ];
+var bids = [
+    {
+        id: 1,
+        name: 'Paradise',
+        description: 'By Micheal Angelo. High quality imitation',
+        startingPrice: 100000,
+        creatorId: 1,
+    },
+    {
+        id: 2,
+        name: 'Jackson Gloves',
+        description: 'Micheal Jackson\'s original gold gloves.',
+        startingPrice: 5000000,
+        creatorId: 3,
+    },
+    {
+        id: 1,
+        name: 'The Medievals',
+        description: 'Poems collections from various ancient literates.',
+        startingPrice: 30000,
+        creatorId: 2,
+    },
+    {
+        id: 1,
+        name: 'The Mac',
+        description: '1974 Apple laptop. Still stunning.',
+        startingPrice: 2000,
+        creatorId: 4,
+    },
+];
 var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, token;
+    var _a, userAccount, existingAccount, token;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -107,6 +155,15 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
                 //TODO: check for unique email
                 //encrypt password
                 _a.password = _b.sent();
+                userAccount = accounts.find(function (account) { return account.accountNumber === user.accountNumber
+                    && account.accountHolderFirstName.toLowerCase() === user.firstName.toLowerCase()
+                    && account.accountHolderLastName.toLowerCase() === user.lastName.toLowerCase(); });
+                if (!userAccount)
+                    throw new Error('Invalid Account');
+                existingAccount = users.find(function (existingUser) { return existingUser.accountNumber === user.accountNumber; });
+                if (userAccount)
+                    throw new Error('You already have an account. Try logging in instead');
+                //userType
                 //store user
                 users.push(user);
                 token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
@@ -120,23 +177,22 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
 }); };
 var resolvers = {
     Query: {
-        users: function () { return users; }
+        users: function () { return users; },
+        bids: function () { return bids; }
     },
     Mutation: {
         register: function (parent, _a, context) {
             var email = _a.email, password = _a.password, firstName = _a.firstName, lastName = _a.lastName, accountNumber = _a.accountNumber, sex = _a.sex;
             return __awaiter(void 0, void 0, void 0, function () {
-                var newUser, authenticatedUserData;
+                var newUser, AuthenticatedUserData;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
                             newUser = { id: -1, email: email, password: password, firstName: firstName, lastName: lastName, accountNumber: accountNumber, sex: sex };
                             return [4 /*yield*/, registerUser(newUser)];
                         case 1:
-                            authenticatedUserData = _b.sent();
-                            //Remove:
-                            console.log(authenticatedUserData);
-                            return [2 /*return*/, authenticatedUserData];
+                            AuthenticatedUserData = _b.sent();
+                            return [2 /*return*/, AuthenticatedUserData];
                     }
                 });
             });
