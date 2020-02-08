@@ -4,7 +4,7 @@
   "main": "index.js",
   "repository": "git@github.com:iyossias-eshete/Bid.git",
   "scripts": {
-    "start": "node dist/index.ts",
+    "start": "node src/index.js",
     "dev": "ts-node-dev --respawn src/index.ts",
     "build-run": "tsc ; ts-node-dev --respawn src/index.ts",
     "build": "tsc",
@@ -16,5 +16,14 @@
   "devDependencies": {
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.7.5"
+  },
+  "dependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "@types/jsonwebtoken": "^8.3.7",
+    "apollo-server": "^2.10.0",
+    "bcryptjs": "^2.4.3",
+    "copyfiles": "^2.2.0",
+    "graphql": "^14.6.0",
+    "jsonwebtoken": "^8.5.1"
   }
 }
