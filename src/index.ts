@@ -103,7 +103,7 @@ type Bid{
   type Mutation{
     register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser
     signIn(email: String!, password: String!) : AuthenticatedUser
-    createBid(name: String!, description: String!, startingPrice: Float!) : Bid  #TODO: CreateBid resolver
+    createBid(name: String!, description: String!, startingPrice: Float) : Bid  #TODO: CreateBid resolver
   }
 `;
 
@@ -172,6 +172,16 @@ const users = [
     sex: "Female",
     password:'ajksdhjashdjksa277319812'
   },
+  {
+    id: 5,
+    firstName: "LeRoY",
+    lastName: "sAnE",
+    email: "Leroy@ManCity.com",
+    accountNumber: 1,
+    sex: "Male",
+    password: "$2a$10$adJvj/GLNx7O0qH1XGRLX.NHUEbHDrmoOQxS1KuDQENrCDx7UMRmK" //ManCity
+    //bearer eyJhbGciOiJIUzI1NiJ9.NQ.iDIkQeIGNPBDihC2GVVoC1bIKjLiQMiEhMN2ebkeMsI
+  }
 
 
 ];
@@ -300,18 +310,25 @@ const resolvers: IResolvers = {
 
     createBid: async (parent, { name, description, startingPrice }, context) => {
 
+      let userId = undefined;
+      console.log(`Rq is ${context.request}`);
       //util
-      const Authorization = context.request.get('Authorization');
-      if (!Authorization) {
-        throw new Error('Not Authenticated');
+      try{
+        const Authorization = context.request.get('Authorization');
+        const token = Authorization.replace('Bearer ', '');
+        console.log(`Token is ${token}`);
+        userId = Number( jwt.verify(token, SECRET) );
+        
       }
-
-      const token = Authorization.replace('Bearer ', '');
-      const userId = Number( jwt.verify(token, SECRET) ); //jwt.sign(user.id.toString(), SECRET);
+      catch(error){
+        throw new Error('Authorization bearer token is not provided or invalid');
+      }
+      // end-of-util
+      console.log(`User id is ${userId}`);
       let newBid: BidType = { id: -1, name, description, startingPrice, status: 'OPEN', creatorId: -1 };
       newBid = await bidCreator(newBid, userId );
       return newBid;
-      // end-of-util
+      
 
     }
 

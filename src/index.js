@@ -60,7 +60,7 @@ var bcryptjs_1 = __importDefault(require("bcryptjs"));
 var SECRET = 'SECRET';
 ;
 ;
-var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float!) : Bid  #TODO: CreateBid resolver\n  }\n"], ["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float!) : Bid  #TODO: CreateBid resolver\n  }\n"])));
+var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float) : Bid  #TODO: CreateBid resolver\n  }\n"], ["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float) : Bid  #TODO: CreateBid resolver\n  }\n"])));
 //data source
 var accounts = [
     {
@@ -125,6 +125,16 @@ var users = [
         sex: "Female",
         password: 'ajksdhjashdjksa277319812'
     },
+    {
+        id: 5,
+        firstName: "LeRoY",
+        lastName: "sAnE",
+        email: "Leroy@ManCity.com",
+        accountNumber: 1,
+        sex: "Male",
+        password: "$2a$10$adJvj/GLNx7O0qH1XGRLX.NHUEbHDrmoOQxS1KuDQENrCDx7UMRmK" //ManCity
+        //bearer eyJhbGciOiJIUzI1NiJ9.NQ.iDIkQeIGNPBDihC2GVVoC1bIKjLiQMiEhMN2ebkeMsI
+    }
 ];
 var bids = [
     {
@@ -154,7 +164,7 @@ var bids = [
         description: '1974 Apple laptop. Still stunning.',
         startingPrice: 2000,
         creatorId: 4,
-    },
+    }
 ];
 var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userAccount, existingAccount, token;
@@ -179,7 +189,7 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
                     throw new Error('You already have an account. Try logging in instead');
                 //userType
                 //store user
-                user.id = ++users.length;
+                user.id = users.length + 1;
                 users.push(user);
                 console.log('Added user');
                 console.log(users);
@@ -228,23 +238,25 @@ var resolvers = {
         signIn: function (parent, _a, context) {
             var email = _a.email, password = _a.password;
             return __awaiter(void 0, void 0, void 0, function () {
-                var user, enteredPassword, token;
+                var user, validPassword, token;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
+                            //get user
+                            console.log("Email si " + email);
                             user = users.find(function (user) { return user.email === email; });
                             if (!user) {
                                 throw new Error('Your account does not exist.');
                             }
-                            return [4 /*yield*/, bcryptjs_1.default.hash(password.toString(), 10)];
+                            return [4 /*yield*/, bcryptjs_1.default.compare(password, user.password)];
                         case 1:
-                            enteredPassword = (_b.sent()).toString();
-                            if (enteredPassword !== user.password) {
+                            validPassword = _b.sent();
+                            if (!validPassword) {
                                 throw new Error('Invalid email or password');
                             }
                             token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
                             //send user
-                            return [2 /*return*/, { user: user, token: '' }];
+                            return [2 /*return*/, { user: user, token: token }];
                     }
                 });
             });
@@ -252,16 +264,23 @@ var resolvers = {
         createBid: function (parent, _a, context) {
             var name = _a.name, description = _a.description, startingPrice = _a.startingPrice;
             return __awaiter(void 0, void 0, void 0, function () {
-                var Authorization, token, userId, newBid;
+                var userId, Authorization, token, newBid;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
-                            Authorization = context.request.get('Authorization');
-                            if (!Authorization) {
-                                throw new Error('Not Authenticated');
+                            userId = undefined;
+                            //util
+                            try {
+                                Authorization = context.request.get('Authorization');
+                                token = Authorization.replace('Bearer ', '');
+                                console.log("Token is " + token);
+                                userId = Number(jsonwebtoken_1.default.verify(token, SECRET));
                             }
-                            token = Authorization.replace('Bearer ', '');
-                            userId = Number(jsonwebtoken_1.default.verify(token, SECRET));
+                            catch (error) {
+                                throw new Error('Authorization bearer token is not provided or invalid');
+                            }
+                            // end-of-util
+                            console.log("User id is " + userId);
                             newBid = { id: -1, name: name, description: description, startingPrice: startingPrice, status: 'OPEN', creatorId: -1 };
                             return [4 /*yield*/, bidCreator(newBid, userId)];
                         case 1:
