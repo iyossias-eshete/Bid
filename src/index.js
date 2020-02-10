@@ -174,15 +174,15 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
                     && account.accountHolderLastName.toLowerCase() === user.lastName.toLowerCase(); });
                 if (!userAccount)
                     throw new Error('Invalid Account');
-                // check if account already exists
-                console.log("My account number is " + user.accountNumber);
-                console.log(users);
                 existingAccount = users.find(function (existingUser) { return existingUser.accountNumber === user.accountNumber; });
                 if (existingAccount)
                     throw new Error('You already have an account. Try logging in instead');
                 //userType
                 //store user
+                user.id = ++users.length;
                 users.push(user);
+                console.log('Added user');
+                console.log(users);
                 token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
                 //send user with token
                 return [2 /*return*/, {
@@ -240,7 +240,7 @@ var resolvers = {
                         case 1:
                             enteredPassword = (_b.sent()).toString();
                             if (enteredPassword !== user.password) {
-                                throw new Error('Invalid user name or password');
+                                throw new Error('Invalid email or password');
                             }
                             token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
                             //send user

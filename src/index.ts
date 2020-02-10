@@ -204,9 +204,7 @@ const bids = [
     description: '1974 Apple laptop. Still stunning.',
     startingPrice: 2000,
     creatorId: 4,
-  },
-
-
+  }
 ];
 
 const registerUser = async (user: userType) => {
@@ -230,8 +228,10 @@ const registerUser = async (user: userType) => {
   //userType
 
   //store user
+  user.id = users.length + 1;
   users.push(user);
-
+  console.log('Added user');
+  console.log(users);
   //generate token
   let token = jwt.sign(user.id.toString(), SECRET);
 
@@ -279,20 +279,22 @@ const resolvers: IResolvers = {
     signIn: async (parent, { email , password } , context ) => {
       
       //get user
+      console.log(`Email si ${email}`);
       const user = users.find( user => user.email === email );
       if(!user){
         throw new Error('Your account does not exist.');
       }
+      
       //check password
-      const enteredPassword = (await bcrypt.hash( password.toString(), 10 ) ).toString();
-      if(enteredPassword !==  user.password ){
-        throw new Error('Invalid user name or password');
+      const validPassword = await bcrypt.compare( password, user.password );
+      if(!validPassword ){
+        throw new Error('Invalid email or password');
       }
       //assign token
       let token = jwt.sign(user.id.toString(), SECRET);
 
       //send user
-      return { user, token: '' };
+      return { user, token };
     },
 
 
