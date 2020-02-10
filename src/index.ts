@@ -1,7 +1,6 @@
 import { ApolloServer, gql, IResolvers } from 'apollo-server';
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import { Context } from 'apollo-server-core';
+import bcrypt from "bcryptjs"
 
 const SECRET = 'SECRET';
 
@@ -15,6 +14,15 @@ interface userType {
   sex: string
 };
 
+interface BidType {
+  id: number,
+  name: string,
+  description: string,
+  startingPrice: number,
+  creatorId: number
+  status: string,
+}
+
 interface authenticatedUserType {
   user: userType,
   token: string
@@ -27,12 +35,12 @@ interface accountType {
   amount: number
 }
 
-interface bidType{
+interface bidType {
   id: number,
   name: string,
   description: string,
-  startingPrice : number,
-  creatorId : number
+  startingPrice: number,
+  creatorId: number
 }
 
 
@@ -41,6 +49,11 @@ const typeDefs = gql`
   enum Sex{
     Male
     Female
+  }
+
+  enum BidStatus{
+    Open,
+    Closed
   }
 
   type User{
@@ -70,11 +83,12 @@ type Account{
 
 
 type Bid{
-  id: Int!
+  id: Int
   name: String!
   description: String!
   startingPrice : Float
   creatorId : Int
+  status : BidStatus
 }
 
    type Query {
@@ -198,15 +212,15 @@ const registerUser = async (user: userType) => {
   user.password = await (await bcrypt.hash(user.password.toString(), 10)).toString();
 
   //verify specified account
-  let userAccount = accounts.find( account => account.accountNumber === user.accountNumber 
-                        && account.accountHolderFirstName.toLowerCase() === user.firstName.toLowerCase() 
-                        && account.accountHolderLastName.toLowerCase()  === user.lastName.toLowerCase() );
-  if(!userAccount)
+  let userAccount = accounts.find(account => account.accountNumber === user.accountNumber
+    && account.accountHolderFirstName.toLowerCase() === user.firstName.toLowerCase()
+    && account.accountHolderLastName.toLowerCase() === user.lastName.toLowerCase());
+  if (!userAccount)
     throw new Error('Invalid Account');
 
   // check if account already exists
-  let existingAccount = users.find( existingUser => existingUser.accountNumber === user.accountNumber );
-  if(userAccount)
+  let existingAccount = users.find(existingUser => existingUser.accountNumber === user.accountNumber);
+  if (userAccount)
     throw new Error('You already have an account. Try logging in instead');
   //userType
 
@@ -224,6 +238,20 @@ const registerUser = async (user: userType) => {
 
 }
 
+const bidCreator = async (bid: BidType, userId: number) => {
+  // verify sent bid
+
+
+  // create bid and link it to the user
+  const userBid: BidType = { ...bid };
+  userBid.creatorId = userId;
+  bids.push(userBid);
+
+  //send bid to user
+  return userBid;
+
+}
+
 const resolvers: IResolvers = {
   Query: {
     users: () => users,
@@ -232,8 +260,9 @@ const resolvers: IResolvers = {
 
   Mutation: {
 
-    register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context: Context) => {
+    register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context: any) => {
       let newUser: userType = { id: -1, email, password, firstName, lastName, accountNumber, sex };
+
 
       // await registerUser(newUser);
       // console.log('Done')
@@ -245,11 +274,39 @@ const resolvers: IResolvers = {
     signIn: async (email: string, password: string) => {
       const user: userType = { id: -1, accountNumber: 1, email: 'pspd@gmail.com', firstName: 'James', lastName: 'Grechen', password: 'ppp', sex: 'Male' };
       return { user, token: '' };
+    },
+
+
+    createBid: async (parent, { name, description, startingPrice }, context) => {
+
+      //util
+      const Authorization = context.request.get('Authorization');
+      if (!Authorization) {
+        throw new Error('Not Authenticated');
+      }
+
+      const token = Authorization.replace('Bearer ', '');
+      const userId = Number( jwt.verify(token, SECRET) ); //jwt.sign(user.id.toString(), SECRET);
+      let newBid: BidType = { id: -1, name, description, startingPrice, status: 'OPEN', creatorId: -1 };
+      newBid = await bidCreator(newBid, userId );
+      return newBid;
+      // end-of-util
+
     }
+
   }
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: request => {
+    return {
+      ...request,
+      // db-client
+    }
+  }
+});
 
 // The `listen` method launches a web server.
 server.listen().then(({ url }) => {
