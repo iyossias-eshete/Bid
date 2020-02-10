@@ -3,6 +3,17 @@ var __makeTemplateObject = (this && this.__makeTemplateObject) || function (cook
     if (Object.defineProperty) { Object.defineProperty(cooked, "raw", { value: raw }); } else { cooked.raw = raw; }
     return cooked;
 };
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -49,16 +60,34 @@ var bcryptjs_1 = __importDefault(require("bcryptjs"));
 var SECRET = 'SECRET';
 ;
 ;
-// const userType = {
-//   id: String,
-//   email: String,
-//   firstName: String,
-//   lastName : String,
-//   password: String,
-//   accountNumber : Number,
-//   sex : String
-// }
-var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  enum Sex{\n    Male\n    Female\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type authenticatedUser{\n    user :User\n    token : String\n  }\n  \n  type testTypeQ{\n    value1 :String\n    value2 : Int\n  }\n\n   type Query {\n    \n    users: [User]\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : authenticatedUser\n    signIn(email: String!, password: String!) : authenticatedUser  \n    testMut(sex: String!) : testTypeQ\n    #testMut(value1: String!, value2: Int!) : testTypeQ\n  }\n"], ["\n  enum Sex{\n    Male\n    Female\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type authenticatedUser{\n    user :User\n    token : String\n  }\n  \n  type testTypeQ{\n    value1 :String\n    value2 : Int\n  }\n\n   type Query {\n    \n    users: [User]\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : authenticatedUser\n    signIn(email: String!, password: String!) : authenticatedUser  \n    testMut(sex: String!) : testTypeQ\n    #testMut(value1: String!, value2: Int!) : testTypeQ\n  }\n"])));
+var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float!) : Bid  #TODO: CreateBid resolver\n  }\n"], ["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float!) : Bid  #TODO: CreateBid resolver\n  }\n"])));
+//data source
+var accounts = [
+    {
+        accountNumber: 1,
+        accountHolderFirstName: 'Leroy',
+        accountHolderLastName: 'Sane',
+        amount: 500000
+    },
+    {
+        accountNumber: 2,
+        accountHolderFirstName: 'Thomas',
+        accountHolderLastName: 'Tukils',
+        amount: 2500000
+    },
+    {
+        accountNumber: 2,
+        accountHolderFirstName: 'Collins',
+        accountHolderLastName: 'Muller',
+        amount: 2500
+    },
+    {
+        accountNumber: 2,
+        accountHolderFirstName: 'Ben',
+        accountHolderLastName: 'Orlando',
+        amount: 1000
+    }
+];
 var users = [
     {
         id: 1,
@@ -66,7 +95,8 @@ var users = [
         firstName: 'liam',
         lastName: 'Nelson',
         accountNumber: 2,
-        sex: "Male"
+        sex: "Male",
+        password: 'ajksdhjashdjksa277319812'
     },
     {
         id: 2,
@@ -74,7 +104,8 @@ var users = [
         firstName: 'Benjamin',
         lastName: 'Loyd',
         accountNumber: 4,
-        sex: "Male"
+        sex: "Male",
+        password: 'ajksdhjashdjksa277319812'
     },
     {
         id: 4,
@@ -82,7 +113,8 @@ var users = [
         firstName: 'Tres',
         lastName: 'Loy',
         accountNumber: 5,
-        sex: "Female"
+        sex: "Female",
+        password: 'ajksdhjashdjksa277319812'
     },
     {
         id: 3,
@@ -90,11 +122,42 @@ var users = [
         firstName: 'Glen',
         lastName: 'Lo',
         accountNumber: 7,
-        sex: "Female"
+        sex: "Female",
+        password: 'ajksdhjashdjksa277319812'
+    },
+];
+var bids = [
+    {
+        id: 1,
+        name: 'Paradise',
+        description: 'By Micheal Angelo. High quality imitation',
+        startingPrice: 100000,
+        creatorId: 1,
+    },
+    {
+        id: 2,
+        name: 'Jackson Gloves',
+        description: 'Micheal Jackson\'s original gold gloves.',
+        startingPrice: 5000000,
+        creatorId: 3,
+    },
+    {
+        id: 3,
+        name: 'The Medievals',
+        description: 'Poems collections from various ancient literates.',
+        startingPrice: 30000,
+        creatorId: 2,
+    },
+    {
+        id: 4,
+        name: 'The Mac',
+        description: '1974 Apple laptop. Still stunning.',
+        startingPrice: 2000,
+        creatorId: 4,
     },
 ];
 var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, token;
+    var _a, userAccount, existingAccount, token;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -102,13 +165,24 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
                 //encrypt password
                 _a = user;
                 return [4 /*yield*/, bcryptjs_1.default.hash(user.password.toString(), 10)];
-            case 1: return [4 /*yield*/, (_b.sent()).toString()];
-            case 2:
+            case 1:
                 //TODO: check for unique email
                 //encrypt password
-                _a.password = _b.sent();
+                _a.password = (_b.sent()).toString();
+                userAccount = accounts.find(function (account) { return account.accountNumber === user.accountNumber
+                    && account.accountHolderFirstName.toLowerCase() === user.firstName.toLowerCase()
+                    && account.accountHolderLastName.toLowerCase() === user.lastName.toLowerCase(); });
+                if (!userAccount)
+                    throw new Error('Invalid Account');
+                existingAccount = users.find(function (existingUser) { return existingUser.accountNumber === user.accountNumber; });
+                if (existingAccount)
+                    throw new Error('You already have an account. Try logging in instead');
+                //userType
                 //store user
+                user.id = ++users.length;
                 users.push(user);
+                console.log('Added user');
+                console.log(users);
                 token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
                 //send user with token
                 return [2 /*return*/, {
@@ -118,39 +192,94 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
         }
     });
 }); };
+var bidCreator = function (bid, userId) { return __awaiter(void 0, void 0, void 0, function () {
+    var userBid;
+    return __generator(this, function (_a) {
+        userBid = __assign({}, bid);
+        userBid.creatorId = userId;
+        bids.push(userBid);
+        //send bid to user
+        return [2 /*return*/, userBid];
+    });
+}); };
 var resolvers = {
     Query: {
-        users: function () { return users; }
+        users: function () { return users; },
+        bids: function () { return bids; }
     },
     Mutation: {
         register: function (parent, _a, context) {
             var email = _a.email, password = _a.password, firstName = _a.firstName, lastName = _a.lastName, accountNumber = _a.accountNumber, sex = _a.sex;
             return __awaiter(void 0, void 0, void 0, function () {
-                var newUser, authenticatedUserData;
+                var newUser, AuthenticatedUserData;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
                             newUser = { id: -1, email: email, password: password, firstName: firstName, lastName: lastName, accountNumber: accountNumber, sex: sex };
                             return [4 /*yield*/, registerUser(newUser)];
                         case 1:
-                            authenticatedUserData = _b.sent();
-                            //Remove:
-                            console.log(authenticatedUserData);
-                            return [2 /*return*/, authenticatedUserData];
+                            AuthenticatedUserData = _b.sent();
+                            return [2 /*return*/, AuthenticatedUserData];
                     }
                 });
             });
         },
-        signIn: function (email, password) { return __awaiter(void 0, void 0, void 0, function () {
-            var user;
-            return __generator(this, function (_a) {
-                user = { id: -1, accountNumber: 1, email: 'pspd@gmail.com', firstName: 'James', lastName: 'Grechen', password: 'ppp', sex: 'Male' };
-                return [2 /*return*/, { user: user, token: '' }];
+        //TODO: do signIn
+        signIn: function (parent, _a, context) {
+            var email = _a.email, password = _a.password;
+            return __awaiter(void 0, void 0, void 0, function () {
+                var user, enteredPassword, token;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            user = users.find(function (user) { return user.email === email; });
+                            if (!user) {
+                                throw new Error('Your account does not exist.');
+                            }
+                            return [4 /*yield*/, bcryptjs_1.default.hash(password.toString(), 10)];
+                        case 1:
+                            enteredPassword = (_b.sent()).toString();
+                            if (enteredPassword !== user.password) {
+                                throw new Error('Invalid email or password');
+                            }
+                            token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
+                            //send user
+                            return [2 /*return*/, { user: user, token: '' }];
+                    }
+                });
             });
-        }); }
+        },
+        createBid: function (parent, _a, context) {
+            var name = _a.name, description = _a.description, startingPrice = _a.startingPrice;
+            return __awaiter(void 0, void 0, void 0, function () {
+                var Authorization, token, userId, newBid;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            Authorization = context.request.get('Authorization');
+                            if (!Authorization) {
+                                throw new Error('Not Authenticated');
+                            }
+                            token = Authorization.replace('Bearer ', '');
+                            userId = Number(jsonwebtoken_1.default.verify(token, SECRET));
+                            newBid = { id: -1, name: name, description: description, startingPrice: startingPrice, status: 'OPEN', creatorId: -1 };
+                            return [4 /*yield*/, bidCreator(newBid, userId)];
+                        case 1:
+                            newBid = _b.sent();
+                            return [2 /*return*/, newBid];
+                    }
+                });
+            });
+        }
     }
 };
-var server = new apollo_server_1.ApolloServer({ typeDefs: typeDefs, resolvers: resolvers });
+var server = new apollo_server_1.ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers,
+    context: function (request) {
+        return __assign({}, request);
+    }
+});
 // The `listen` method launches a web server.
 server.listen().then(function (_a) {
     var url = _a.url;
