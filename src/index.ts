@@ -142,7 +142,8 @@ const users = [
     firstName: 'liam',
     lastName: 'Nelson',
     accountNumber: 2,
-    sex: "Male"
+    sex: "Male",
+    password:'ajksdhjashdjksa277319812'
   },
   {
     id: 2,
@@ -150,7 +151,8 @@ const users = [
     firstName: 'Benjamin',
     lastName: 'Loyd',
     accountNumber: 4,
-    sex: "Male"
+    sex: "Male",
+    password:'ajksdhjashdjksa277319812'
   },
   {
     id: 4,
@@ -158,7 +160,8 @@ const users = [
     firstName: 'Tres',
     lastName: 'Loy',
     accountNumber: 5,
-    sex: "Female"
+    sex: "Female",
+    password:'ajksdhjashdjksa277319812'
   },
   {
     id: 3,
@@ -166,7 +169,8 @@ const users = [
     firstName: 'Glen',
     lastName: 'Lo',
     accountNumber: 7,
-    sex: "Female"
+    sex: "Female",
+    password:'ajksdhjashdjksa277319812'
   },
 
 
@@ -209,7 +213,7 @@ const registerUser = async (user: userType) => {
   //TODO: check for unique email
 
   //encrypt password
-  user.password = await (await bcrypt.hash(user.password.toString(), 10)).toString();
+  user.password = (await bcrypt.hash(user.password.toString(), 10)).toString();
 
   //verify specified account
   let userAccount = accounts.find(account => account.accountNumber === user.accountNumber
@@ -219,8 +223,9 @@ const registerUser = async (user: userType) => {
     throw new Error('Invalid Account');
 
   // check if account already exists
+  
   let existingAccount = users.find(existingUser => existingUser.accountNumber === user.accountNumber);
-  if (userAccount)
+  if (existingAccount)
     throw new Error('You already have an account. Try logging in instead');
   //userType
 
@@ -260,7 +265,7 @@ const resolvers: IResolvers = {
 
   Mutation: {
 
-    register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context: any) => {
+    register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context ) => {
       let newUser: userType = { id: -1, email, password, firstName, lastName, accountNumber, sex };
 
 
@@ -271,8 +276,22 @@ const resolvers: IResolvers = {
       return AuthenticatedUserData;
     },
     //TODO: do signIn
-    signIn: async (email: string, password: string) => {
-      const user: userType = { id: -1, accountNumber: 1, email: 'pspd@gmail.com', firstName: 'James', lastName: 'Grechen', password: 'ppp', sex: 'Male' };
+    signIn: async (parent, { email , password } , context ) => {
+      
+      //get user
+      const user = users.find( user => user.email === email );
+      if(!user){
+        throw new Error('Your account does not exist.');
+      }
+      //check password
+      const enteredPassword = (await bcrypt.hash( password.toString(), 10 ) ).toString();
+      if(enteredPassword !==  user.password ){
+        throw new Error('Invalid user name or password');
+      }
+      //assign token
+      let token = jwt.sign(user.id.toString(), SECRET);
+
+      //send user
       return { user, token: '' };
     },
 

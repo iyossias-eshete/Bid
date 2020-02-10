@@ -95,7 +95,8 @@ var users = [
         firstName: 'liam',
         lastName: 'Nelson',
         accountNumber: 2,
-        sex: "Male"
+        sex: "Male",
+        password: 'ajksdhjashdjksa277319812'
     },
     {
         id: 2,
@@ -103,7 +104,8 @@ var users = [
         firstName: 'Benjamin',
         lastName: 'Loyd',
         accountNumber: 4,
-        sex: "Male"
+        sex: "Male",
+        password: 'ajksdhjashdjksa277319812'
     },
     {
         id: 4,
@@ -111,7 +113,8 @@ var users = [
         firstName: 'Tres',
         lastName: 'Loy',
         accountNumber: 5,
-        sex: "Female"
+        sex: "Female",
+        password: 'ajksdhjashdjksa277319812'
     },
     {
         id: 3,
@@ -119,7 +122,8 @@ var users = [
         firstName: 'Glen',
         lastName: 'Lo',
         accountNumber: 7,
-        sex: "Female"
+        sex: "Female",
+        password: 'ajksdhjashdjksa277319812'
     },
 ];
 var bids = [
@@ -161,18 +165,20 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
                 //encrypt password
                 _a = user;
                 return [4 /*yield*/, bcryptjs_1.default.hash(user.password.toString(), 10)];
-            case 1: return [4 /*yield*/, (_b.sent()).toString()];
-            case 2:
+            case 1:
                 //TODO: check for unique email
                 //encrypt password
-                _a.password = _b.sent();
+                _a.password = (_b.sent()).toString();
                 userAccount = accounts.find(function (account) { return account.accountNumber === user.accountNumber
                     && account.accountHolderFirstName.toLowerCase() === user.firstName.toLowerCase()
                     && account.accountHolderLastName.toLowerCase() === user.lastName.toLowerCase(); });
                 if (!userAccount)
                     throw new Error('Invalid Account');
+                // check if account already exists
+                console.log("My account number is " + user.accountNumber);
+                console.log(users);
                 existingAccount = users.find(function (existingUser) { return existingUser.accountNumber === user.accountNumber; });
-                if (userAccount)
+                if (existingAccount)
                     throw new Error('You already have an account. Try logging in instead');
                 //userType
                 //store user
@@ -219,13 +225,30 @@ var resolvers = {
             });
         },
         //TODO: do signIn
-        signIn: function (email, password) { return __awaiter(void 0, void 0, void 0, function () {
-            var user;
-            return __generator(this, function (_a) {
-                user = { id: -1, accountNumber: 1, email: 'pspd@gmail.com', firstName: 'James', lastName: 'Grechen', password: 'ppp', sex: 'Male' };
-                return [2 /*return*/, { user: user, token: '' }];
+        signIn: function (parent, _a, context) {
+            var email = _a.email, password = _a.password;
+            return __awaiter(void 0, void 0, void 0, function () {
+                var user, enteredPassword, token;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            user = users.find(function (user) { return user.email === email; });
+                            if (!user) {
+                                throw new Error('Your account does not exist.');
+                            }
+                            return [4 /*yield*/, bcryptjs_1.default.hash(password.toString(), 10)];
+                        case 1:
+                            enteredPassword = (_b.sent()).toString();
+                            if (enteredPassword !== user.password) {
+                                throw new Error('Invalid user name or password');
+                            }
+                            token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
+                            //send user
+                            return [2 /*return*/, { user: user, token: '' }];
+                    }
+                });
             });
-        }); },
+        },
         createBid: function (parent, _a, context) {
             var name = _a.name, description = _a.description, startingPrice = _a.startingPrice;
             return __awaiter(void 0, void 0, void 0, function () {
