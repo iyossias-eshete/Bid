@@ -54,13 +54,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var apollo_server_1 = require("apollo-server");
+var apollo_server_express_1 = require("apollo-server-express");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var bcryptjs_1 = __importDefault(require("bcryptjs"));
+var express_1 = __importDefault(require("express"));
+var app = express_1.default();
 var SECRET = 'SECRET';
 ;
 ;
-var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float) : Bid  #TODO: CreateBid resolver\n  }\n"], ["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float) : Bid  #TODO: CreateBid resolver\n  }\n"])));
+var typeDefs = apollo_server_express_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float) : Bid  #TODO: CreateBid resolver\n  }\n"], ["\n  enum Sex{\n    Male\n    Female\n  }\n\n  enum BidStatus{\n    Open,\n    Closed\n  }\n\n  type User{\n    id: Int\n    email: String!\n    firstName: String!\n    lastName : String!\n    password: String!\n    accountNumber : Int!\n    sex : Sex!\n  }\n\n  type AuthenticatedUser{\n    user :User\n    token : String\n  }\n  \n\n\ntype Account{\n  accountNumber: Int!,\n  accountHolderFirstName: String!,\n  accountHolderLastName: String!,\n  amount: Int!\n}\n\n\n\ntype Bid{\n  id: Int\n  name: String!\n  description: String!\n  startingPrice : Float\n  creatorId : Int\n  status : BidStatus\n}\n\n   type Query {\n    \n    users: [User]\n    accounts: [Account]\n    bids: [Bid]\n    myBid: [Bid] #TODO: bids I've created\n    bidding: [Bid] #TODO: ones I've bid on\n  }\n\n  type Mutation{\n    register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser\n    signIn(email: String!, password: String!) : AuthenticatedUser\n    createBid(name: String!, description: String!, startingPrice: Float) : Bid  #TODO: CreateBid resolver\n  }\n"])));
 //data source
 var accounts = [
     {
@@ -269,9 +271,13 @@ var resolvers = {
                     switch (_b.label) {
                         case 0:
                             userId = undefined;
+                            //console.log(context);
+                            //console.log(`Req is ${context.req.Authorization}`);//get('Authorization')}`);
+                            console.log("Bearer is " + context.req.headers['authorization']);
+                            //console.log(`Rq is ${context.req.headers.Authorization}`);//get('Authorization')}`);
                             //util
                             try {
-                                Authorization = context.request.get('Authorization');
+                                Authorization = context.req.get('Authorization');
                                 token = Authorization.replace('Bearer ', '');
                                 console.log("Token is " + token);
                                 userId = Number(jsonwebtoken_1.default.verify(token, SECRET));
@@ -292,16 +298,21 @@ var resolvers = {
         }
     }
 };
-var server = new apollo_server_1.ApolloServer({
+var server = new apollo_server_express_1.ApolloServer({
     typeDefs: typeDefs,
     resolvers: resolvers,
-    context: function (request) {
-        return __assign({}, request);
+    context: function (integrationContext) {
+        return {
+            req: express_1.default.request,
+            res: express_1.default.response
+            //...request,
+            // db-client
+        };
     }
 });
-// The `listen` method launches a web server.
-server.listen().then(function (_a) {
-    var url = _a.url;
-    console.log("\uD83D\uDE80 Server ready at " + url);
+//app.use('/', graphqlEx)
+server.applyMiddleware({ app: app, path: '/' });
+app.listen({ port: 4000 }, function () {
+    console.log("\uD83D\uDE80 Server ready at http://localhost:4000" + server.graphqlPath);
 });
 var templateObject_1;

@@ -1,6 +1,10 @@
-import { ApolloServer, gql, IResolvers } from 'apollo-server';
+import { ApolloServer, gql, IResolvers } from 'apollo-server-express';
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs"
+import express from 'express';
+import { graphql } from 'graphql';
+
+const app = express ();
 
 const SECRET = 'SECRET';
 
@@ -311,10 +315,15 @@ const resolvers: IResolvers = {
     createBid: async (parent, { name, description, startingPrice }, context) => {
 
       let userId = undefined;
-      console.log(`Rq is ${context.request}`);
+      //console.log(context);
+      //console.log(`Req is ${context.req.Authorization}`);//get('Authorization')}`);
+      console.log(context.req.header);
+      console.log(`Bearer is ${context.req.headers['authorization']}`);
+
+      //console.log(`Rq is ${context.req.headers.Authorization}`);//get('Authorization')}`);
       //util
       try{
-        const Authorization = context.request.get('Authorization');
+        const Authorization = context.req.get('Authorization');
         const token = Authorization.replace('Bearer ', '');
         console.log(`Token is ${token}`);
         userId = Number( jwt.verify(token, SECRET) );
@@ -338,15 +347,14 @@ const resolvers: IResolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: request => {
-    return {
-      ...request,
-      // db-client
-    }
-  }
+  context: ( {req,res}) => ({req,res})
+  
 });
 
-// The `listen` method launches a web server.
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
+//app.use('/', graphqlEx)
+
+server.applyMiddleware( { app , path : '/'});
+
+app.listen( {port : 4000 }, ()=> {
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 });
