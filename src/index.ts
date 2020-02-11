@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs"
 import express from 'express';
 import { graphql } from 'graphql';
 
-const app = express ();
+const app = express();
 
 const SECRET = 'SECRET';
 
@@ -107,7 +107,8 @@ type Bid{
   type Mutation{
     register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser
     signIn(email: String!, password: String!) : AuthenticatedUser
-    createBid(name: String!, description: String!, startingPrice: Float) : Bid  #TODO: CreateBid resolver
+    createBid(name: String!, description: String!, startingPrice: Float) : Bid
+    updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid 
   }
 `;
 
@@ -126,13 +127,13 @@ const accounts = [
     amount: 2500000
   },
   {
-    accountNumber: 2,
+    accountNumber: 3,
     accountHolderFirstName: 'Collins',
-    accountHolderLastName: 'Muller',
+    accountHolderLastName: 'Muller', // pwd:ManCity token:eyJhbGciOiJIUzI1NiJ9.NQ.iDIkQeIGNPBDihC2GVVoC1bIKjLiQMiEhMN2ebkeMsI
     amount: 2500
   },
   {
-    accountNumber: 2,
+    accountNumber: 12,
     accountHolderFirstName: 'Ben',
     accountHolderLastName: 'Orlando',
     amount: 1000
@@ -140,15 +141,15 @@ const accounts = [
 ];
 
 const users = [
-  {
-    id: 1,
-    email: 'Liam@gmail.com',
-    firstName: 'liam',
-    lastName: 'Nelson',
-    accountNumber: 2,
-    sex: "Male",
-    password:'ajksdhjashdjksa277319812'
-  },
+  // {
+  //   id: 1,
+  //   email: 'Liam@gmail.com',
+  //   firstName: 'liam',
+  //   lastName: 'Nelson',
+  //   accountNumber: 2,
+  //   sex: "Male",
+  //   password:'ajksdhjashdjksa277319812'
+  // },
   {
     id: 2,
     email: 'Benji@gmail.com',
@@ -156,7 +157,7 @@ const users = [
     lastName: 'Loyd',
     accountNumber: 4,
     sex: "Male",
-    password:'ajksdhjashdjksa277319812'
+    password: 'ajksdhjashdjksa277319812'
   },
   {
     id: 4,
@@ -165,7 +166,7 @@ const users = [
     lastName: 'Loy',
     accountNumber: 5,
     sex: "Female",
-    password:'ajksdhjashdjksa277319812'
+    password: 'ajksdhjashdjksa277319812'
   },
   {
     id: 3,
@@ -174,7 +175,7 @@ const users = [
     lastName: 'Lo',
     accountNumber: 7,
     sex: "Female",
-    password:'ajksdhjashdjksa277319812'
+    password: 'ajksdhjashdjksa277319812'
   },
   {
     id: 5,
@@ -197,6 +198,7 @@ const bids = [
     description: 'By Micheal Angelo. High quality imitation',
     startingPrice: 100000,
     creatorId: 1,
+    status: 'Open'
   },
   {
     id: 2,
@@ -204,9 +206,11 @@ const bids = [
     description: 'Micheal Jackson\'s original gold gloves.',
     startingPrice: 5000000,
     creatorId: 3,
+    status: 'Open'
   },
   {
     id: 3,
+    status: 'Open',
     name: 'The Medievals',
     description: 'Poems collections from various ancient literates.',
     startingPrice: 30000,
@@ -218,6 +222,7 @@ const bids = [
     description: '1974 Apple laptop. Still stunning.',
     startingPrice: 2000,
     creatorId: 4,
+    status: 'Open'
   }
 ];
 
@@ -232,10 +237,10 @@ const registerUser = async (user: userType) => {
     && account.accountHolderFirstName.toLowerCase() === user.firstName.toLowerCase()
     && account.accountHolderLastName.toLowerCase() === user.lastName.toLowerCase());
   if (!userAccount)
-    throw new Error('Invalid Account');
+    throw new Error('Invalid Bank Account');
 
   // check if account already exists
-  
+
   let existingAccount = users.find(existingUser => existingUser.accountNumber === user.accountNumber);
   if (existingAccount)
     throw new Error('You already have an account. Try logging in instead');
@@ -264,6 +269,7 @@ const bidCreator = async (bid: BidType, userId: number) => {
   // create bid and link it to the user
   const userBid: BidType = { ...bid };
   userBid.creatorId = userId;
+  userBid.id = bids.length + 1;
   bids.push(userBid);
 
   //send bid to user
@@ -279,7 +285,7 @@ const resolvers: IResolvers = {
 
   Mutation: {
 
-    register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context ) => {
+    register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context) => {
       let newUser: userType = { id: -1, email, password, firstName, lastName, accountNumber, sex };
 
 
@@ -290,18 +296,18 @@ const resolvers: IResolvers = {
       return AuthenticatedUserData;
     },
     //TODO: do signIn
-    signIn: async (parent, { email , password } , context ) => {
-      
+    signIn: async (parent, { email, password }, context) => {
+
       //get user
       console.log(`Email si ${email}`);
-      const user = users.find( user => user.email === email );
-      if(!user){
+      const user = users.find(user => user.email === email);
+      if (!user) {
         throw new Error('Your account does not exist.');
       }
-      
+
       //check password
-      const validPassword = await bcrypt.compare( password, user.password );
-      if(!validPassword ){
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
         throw new Error('Invalid email or password');
       }
       //assign token
@@ -315,49 +321,106 @@ const resolvers: IResolvers = {
     createBid: async (parent, { name, description, startingPrice }, context) => {
 
       let userId = undefined;
-      
+
       //util
-      try{
+      try {
         const Authorization = context.req.get('Authorization');
         console.log(`Authorization is ${Authorization}`);
-        if(Authorization === undefined)
+        if (Authorization === undefined)
           throw new Error('Authorization bearer token not provided.');
-        
+
         const token = Authorization.replace('Bearer ', '');
         console.log(`Token is ${token}`);
-        userId = Number( jwt.verify(token, SECRET) );
-        
+        userId = Number(jwt.verify(token, SECRET));
+
       }
-      catch(error){
-        
+      catch (error) {
+
         console.log(`Thrown messages  is ${error}`)
-        throw new Error( error );
+        throw new Error(error);
         //|| 'Error: Authorization bearer token not provided.');
         //throw new Error('Authorization bearer token is not provided or invalid');
       }
       // end-of-util
       console.log(`User id is ${userId}`);
-      let newBid: BidType = { id: -1, name, description, startingPrice, status: 'OPEN', creatorId: -1 };
-      newBid = await bidCreator(newBid, userId );
+      let newBid: BidType = { id: -1, name, description, startingPrice, status: 'Open', creatorId: -1 };
+      newBid = await bidCreator(newBid, userId);
       return newBid;
-      
 
+
+    },
+
+    //updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid 
+    updateBid: async (parent, { id, name, description, startingPrice, status }, context) => {
+      // verify that the user is authorized to update the bid
+      let userId = verifyUser(context.req);
+
+      //get bid
+      const bid = bids.find(bid => bid.id === id);
+
+      if (!bid)
+        throw new Error('Bid could not be found');
+
+      if ( bid.creatorId !== userId)
+        throw new Error('You are only authorized to update the bids you created');
+
+        console.log(`Passed name is ${name}`);
+        console.log(`Passed description is ${description}`);
+        console.log(`Passed startingPrice is ${startingPrice}`);
+        console.log(`Passed status is ${status}`);
+      //updates bid in the array obj
+      bid.name = name ? name.toString() : bid.name;
+      bid.description = description ? description.toString() : bid.description;
+      bid.startingPrice = startingPrice ? Number(startingPrice) : bid.startingPrice;
+      bid.status = status ? status : bid.status;
+
+      return bid;
+
+
+
+      // 
     }
 
   }
 };
 
+const verifyUser = (req: Express.Request) => {
+  //util
+  let userId = undefined;
+  try {
+    const Authorization = req.get('Authorization');
+    console.log(`Authorization is ${Authorization}`);
+    if (Authorization === undefined)
+      throw new Error('Authorization bearer token not provided.');
+
+    const token = Authorization.replace('Bearer ', '');
+    console.log(`Token is ${token}`);
+    userId = Number(jwt.verify(token, SECRET));
+
+  }
+  catch (error) {
+
+    console.log(`Thrown messages  is ${error}`)
+    throw new Error(error);
+    //|| 'Error: Authorization bearer token not provided.');
+    //throw new Error('Authorization bearer token is not provided or invalid');
+  }
+  // end-of-util
+
+  return userId;
+}
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ( {req,res}) => ({req,res})
-  
+  context: ({ req, res }) => ({ req, res })
+
 });
 
 //app.use('/', graphqlEx)
 
-server.applyMiddleware( { app , path : '/'});
+server.applyMiddleware({ app, path: '/' });
 
-app.listen( {port : 4000 }, ()=> {
+app.listen({ port: 4000 }, () => {
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 });
