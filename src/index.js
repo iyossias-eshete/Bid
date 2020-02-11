@@ -271,13 +271,15 @@ var resolvers = {
                     switch (_b.label) {
                         case 0:
                             userId = undefined;
-                            //console.log(context);
-                            //console.log(`Req is ${context.req.Authorization}`);//get('Authorization')}`);
-                            console.log("Bearer is " + context.req.headers['authorization']);
-                            //console.log(`Rq is ${context.req.headers.Authorization}`);//get('Authorization')}`);
                             //util
                             try {
                                 Authorization = context.req.get('Authorization');
+                                console.log("Authorization is " + typeof Authorization);
+                                if (Authorization === undefined) {
+                                    console.log("You are undefined");
+                                    throw new Error('Authorization bearer token not provided.');
+                                    return [2 /*return*/];
+                                }
                                 token = Authorization.replace('Bearer ', '');
                                 console.log("Token is " + token);
                                 userId = Number(jsonwebtoken_1.default.verify(token, SECRET));
@@ -301,13 +303,9 @@ var resolvers = {
 var server = new apollo_server_express_1.ApolloServer({
     typeDefs: typeDefs,
     resolvers: resolvers,
-    context: function (integrationContext) {
-        return {
-            req: express_1.default.request,
-            res: express_1.default.response
-            //...request,
-            // db-client
-        };
+    context: function (_a) {
+        var req = _a.req, res = _a.res;
+        return ({ req: req, res: res });
     }
 });
 //app.use('/', graphqlEx)

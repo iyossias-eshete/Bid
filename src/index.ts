@@ -315,22 +315,25 @@ const resolvers: IResolvers = {
     createBid: async (parent, { name, description, startingPrice }, context) => {
 
       let userId = undefined;
-      //console.log(context);
-      //console.log(`Req is ${context.req.Authorization}`);//get('Authorization')}`);
-      console.log(context.req.header);
-      console.log(`Bearer is ${context.req.headers['authorization']}`);
-
-      //console.log(`Rq is ${context.req.headers.Authorization}`);//get('Authorization')}`);
+      
       //util
       try{
         const Authorization = context.req.get('Authorization');
+        console.log(`Authorization is ${Authorization}`);
+        if(Authorization === undefined)
+          throw new Error('Authorization bearer token not provided.');
+        
         const token = Authorization.replace('Bearer ', '');
         console.log(`Token is ${token}`);
         userId = Number( jwt.verify(token, SECRET) );
         
       }
       catch(error){
-        throw new Error('Authorization bearer token is not provided or invalid');
+        
+        console.log(`Thrown messages  is ${error}`)
+        throw new Error( error );
+        //|| 'Error: Authorization bearer token not provided.');
+        //throw new Error('Authorization bearer token is not provided or invalid');
       }
       // end-of-util
       console.log(`User id is ${userId}`);
