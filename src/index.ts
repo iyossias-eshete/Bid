@@ -108,7 +108,8 @@ type Bid{
     register(email: String!, password: String!, firstName: String!, lastName: String!, accountNumber: Int!, sex: String!) : AuthenticatedUser
     signIn(email: String!, password: String!) : AuthenticatedUser
     createBid(name: String!, description: String!, startingPrice: Float) : Bid
-    updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid 
+    updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid
+    deleteBid(id: Int!) : Int 
   }
 `;
 
@@ -367,6 +368,32 @@ const resolvers: IResolvers = {
 
       return bid;
       
+    },
+
+    deleteBid : async ( parent, { id }, context ) =>{
+       // verify that the user is authorized to update the bid
+       let userId = verifyUser(context.req);
+
+       //get bid
+      let bid = bids.find(bid => bid.id === id);
+
+      if (!bid)
+        throw new Error('Bid could not be found');
+
+      if ( bid.creatorId !== userId)
+          throw new Error('You are only authorized to delete the bids you created');
+
+    let deletedBidId = bid.id;
+    
+    bid.id =  NaN;
+    bid.description = '';
+    bid.name = '';
+    bid.status = 'Closed',
+    bid.startingPrice = -1;
+    bid.creatorId = NaN;
+    
+    return deletedBidId;    
+
     }
 
   }
