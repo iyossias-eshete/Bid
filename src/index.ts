@@ -249,8 +249,7 @@ const registerUser = async (user: userType) => {
   //store user
   user.id = users.length + 1;
   users.push(user);
-  console.log('Added user');
-  console.log(users);
+  
   //generate token
   let token = jwt.sign(user.id.toString(), SECRET);
 
@@ -288,10 +287,6 @@ const resolvers: IResolvers = {
     register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context) => {
       let newUser: userType = { id: -1, email, password, firstName, lastName, accountNumber, sex };
 
-
-      // await registerUser(newUser);
-      // console.log('Done')
-
       let AuthenticatedUserData: authenticatedUserType = await registerUser(newUser);
       return AuthenticatedUserData;
     },
@@ -299,7 +294,7 @@ const resolvers: IResolvers = {
     signIn: async (parent, { email, password }, context) => {
 
       //get user
-      console.log(`Email si ${email}`);
+      
       const user = users.find(user => user.email === email);
       if (!user) {
         throw new Error('Your account does not exist.');
@@ -325,28 +320,27 @@ const resolvers: IResolvers = {
       //util
       try {
         const Authorization = context.req.get('Authorization');
-        console.log(`Authorization is ${Authorization}`);
+       
         if (Authorization === undefined)
           throw new Error('Authorization bearer token not provided.');
 
         const token = Authorization.replace('Bearer ', '');
-        console.log(`Token is ${token}`);
+       
         userId = Number(jwt.verify(token, SECRET));
 
       }
       catch (error) {
-
-        console.log(`Thrown messages  is ${error}`)
+                
         throw new Error(error);
-        //|| 'Error: Authorization bearer token not provided.');
-        //throw new Error('Authorization bearer token is not provided or invalid');
+
+        
       }
       // end-of-util
-      console.log(`User id is ${userId}`);
+      
+      
       let newBid: BidType = { id: -1, name, description, startingPrice, status: 'Open', creatorId: -1 };
       newBid = await bidCreator(newBid, userId);
       return newBid;
-
 
     },
 
@@ -364,10 +358,7 @@ const resolvers: IResolvers = {
       if ( bid.creatorId !== userId)
         throw new Error('You are only authorized to update the bids you created');
 
-        console.log(`Passed name is ${name}`);
-        console.log(`Passed description is ${description}`);
-        console.log(`Passed startingPrice is ${startingPrice}`);
-        console.log(`Passed status is ${status}`);
+   
       //updates bid in the array obj
       bid.name = name ? name.toString() : bid.name;
       bid.description = description ? description.toString() : bid.description;
@@ -375,10 +366,7 @@ const resolvers: IResolvers = {
       bid.status = status ? status : bid.status;
 
       return bid;
-
-
-
-      // 
+      
     }
 
   }
@@ -389,21 +377,17 @@ const verifyUser = (req: Express.Request) => {
   let userId = undefined;
   try {
     const Authorization = req.get('Authorization');
-    console.log(`Authorization is ${Authorization}`);
+    
     if (Authorization === undefined)
       throw new Error('Authorization bearer token not provided.');
 
     const token = Authorization.replace('Bearer ', '');
-    console.log(`Token is ${token}`);
+   
     userId = Number(jwt.verify(token, SECRET));
 
   }
-  catch (error) {
-
-    console.log(`Thrown messages  is ${error}`)
-    throw new Error(error);
-    //|| 'Error: Authorization bearer token not provided.');
-    //throw new Error('Authorization bearer token is not provided or invalid');
+  catch (error) {   
+    throw new Error(error);   
   }
   // end-of-util
 
