@@ -1,6 +1,6 @@
 import { Model } from "objection";
 
-class Bids extends Model {
+class Bid extends Model {
     id!: number;
     name!: string;
     description!: string;
@@ -8,7 +8,7 @@ class Bids extends Model {
     creatorId! : number;
     status! : string;
 
-    static tableName = 'bids';
+    static tableName = 'bid';
 
     static jsonSchema = {
         type: 'object',
@@ -27,5 +27,5 @@ class Bids extends Model {
     //static relationMappings
 }
 
-export default Bids;
+export default Bid;
 

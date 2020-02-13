@@ -1,8 +1,9 @@
 "use strict";
 // Update with your config settings.
 Object.defineProperty(exports, "__esModule", { value: true });
-const knexConfig = {
-    development: {
+//const knexConfig = {
+module.exports = {  
+development: {
         client: 'postgresql',
         connection: {
             host: '127.0.0.1',
@@ -41,6 +42,8 @@ const knexConfig = {
             tableName: 'knex_migrations'
         }
     }
-};
-exports.default = knexConfig;
+}
+//};
+
+//exports.default = knexConfig;
 //# sourceMappingURL=knexfile.js.map

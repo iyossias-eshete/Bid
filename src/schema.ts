@@ -25,13 +25,13 @@ const typeDefs = gql`
     user :User
     token : String
   }
-  
 
 
 type Account{
   accountNumber: Int!,
-  accountHolderFirstName: String!,
-  accountHolderLastName: String!,
+  holderFirstName: String!,
+  holderLastName: String!,
+  holderEmail: String!,
   amount: Int!
 }
 

@@ -184,7 +184,14 @@ const registerUser = async (user: userType) => {
     user
   }
 
-}
+};
+
+const accountVerifier = ()=>{
+  //email check
+
+  //
+
+};
 
 const bidCreator = async (bid: BidType, userId: number) => {
   // verify sent bid

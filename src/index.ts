@@ -15,11 +15,7 @@ import resolvers from "./resolvers/resolvers";
 
 dbInitializer();
 
-
-
 const app = express();
-
-
 
 const server = new ApolloServer({
   typeDefs,

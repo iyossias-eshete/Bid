@@ -1,6 +1,6 @@
 import { Model } from "objection";
 
-class Users extends Model {
+class User extends Model {
     id!: number;
     email!: string;
     password!: string;
@@ -9,7 +9,7 @@ class Users extends Model {
     accountNumber! : number;
     sex! : string;
 
-    static tableName = 'users';
+    static tableName = 'user';
 
     static jsonSchema = {
         type: 'object',
@@ -29,5 +29,5 @@ class Users extends Model {
     //static relationMappings
 }
 
-export default Users;
+export default User;
 
