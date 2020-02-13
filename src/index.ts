@@ -10,8 +10,8 @@ dotenv.config();
 import dbInitializer  from "./utils/db.util";
 
 
-import  typeDefs  from "./schema/schema"; 
-import resolvers from "./resolvers/resolvers";
+import  typeDefs  from "./schema"; 
+import resolvers from "./resolvers";
 
 dbInitializer();
 

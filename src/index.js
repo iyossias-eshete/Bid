@@ -10,8 +10,8 @@ var dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 //db
 var db_util_1 = __importDefault(require("./utils/db.util"));
-var schema_1 = __importDefault(require("./schema/schema"));
-var resolvers_1 = __importDefault(require("./resolvers/resolvers"));
+var schema_1 = __importDefault(require("./schema"));
+var resolvers_1 = __importDefault(require("./resolvers"));
 db_util_1.default();
 var app = express_1.default();
 var server = new apollo_server_express_1.ApolloServer({

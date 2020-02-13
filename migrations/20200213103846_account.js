@@ -5,6 +5,7 @@ exports.up = function(knex) {
     table.string('holdersFirstName').notNullable();
     table.string('holdersLastName').notNullable();
     table.string('holdersEmail').notNullable().unique();
+    table.float('amount').notNullable().defaultsTo(0);
     table.timestamps(true,true);
   });
 };

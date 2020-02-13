@@ -151,6 +151,56 @@ const bids = [
   }
 ];
 
+import User from "./models/user.model";
+import Account from "./models/account.model";
+
+const registerUser = async (user: userType) => {
+  try {
+    user.password = (await bcrypt.hash(user.password.toString(), 10)).toString();
+
+    // user exists
+    const userExists = await User.query()
+      .select('email')
+      .where('email', '=', user.email);
+
+
+    if (userExists.length)
+      throw new Error('Account with the specified email already exists');
+
+    // verify user's account number
+    const existingAccount = await Account.query().findById(user.accountNumber);
+
+    //TODO: correct message
+    if (existingAccount) {
+
+      if (existingAccount.holdersEmail !== user.email || existingAccount.holdersFirstName !== user.firstName || existingAccount.holdersLastName !== user.lastName)
+        throw new Error('Account number you specified belongs to someone else');
+
+
+      const registeredUser = await User.query().insert({
+        ...user
+      });
+
+      return registerUser;
+
+    };
+
+    throw new Error('Please enter a vaild account. The account does not belong to you');
+
+    
+  }
+
+  catch (error) {
+    throw new Error(error);
+  }
+
+  /*const logins = await Logins.query().insert({
+    email: (req as any).body.email,
+    password: hashedPassword
+  });*/
+
+}
+/*
 const registerUser = async (user: userType) => {
   //TODO: check for unique email
 
@@ -174,7 +224,7 @@ const registerUser = async (user: userType) => {
   //store user
   user.id = users.length + 1;
   users.push(user);
-  
+
   //generate token
   let token = jwt.sign(user.id.toString(), SECRET);
 
@@ -185,8 +235,9 @@ const registerUser = async (user: userType) => {
   }
 
 };
+*/
 
-const accountVerifier = ()=>{
+const accountVerifier = () => {
   //email check
 
   //
@@ -226,7 +277,7 @@ const resolvers: IResolvers = {
     signIn: async (parent, { email, password }, context) => {
 
       //get user
-      
+
       const user = users.find(user => user.email === email);
       if (!user) {
         throw new Error('Your account does not exist.');
@@ -252,24 +303,24 @@ const resolvers: IResolvers = {
       //util
       try {
         const Authorization = context.req.get('Authorization');
-       
+
         if (Authorization === undefined)
           throw new Error('Authorization bearer token not provided.');
 
         const token = Authorization.replace('Bearer ', '');
-       
+
         userId = Number(jwt.verify(token, SECRET));
 
       }
       catch (error) {
-                
+
         throw new Error(error);
 
-        
+
       }
       // end-of-util
-      
-      
+
+
       let newBid: BidType = { id: -1, name, description, startingPrice, status: 'Open', creatorId: -1 };
       newBid = await bidCreator(newBid, userId);
       return newBid;
@@ -287,10 +338,10 @@ const resolvers: IResolvers = {
       if (!bid)
         throw new Error('Bid could not be found');
 
-      if ( bid.creatorId !== userId)
+      if (bid.creatorId !== userId)
         throw new Error('You are only authorized to update the bids you created');
 
-   
+
       //updates bid in the array obj
       bid.name = name ? name.toString() : bid.name;
       bid.description = description ? description.toString() : bid.description;
@@ -298,32 +349,32 @@ const resolvers: IResolvers = {
       bid.status = status ? status : bid.status;
 
       return bid;
-      
+
     },
 
-    deleteBid : async ( parent, { id }, context ) =>{
-       // verify that the user is authorized to update the bid
-       let userId = verifyUser(context.req);
+    deleteBid: async (parent, { id }, context) => {
+      // verify that the user is authorized to update the bid
+      let userId = verifyUser(context.req);
 
-       //get bid
+      //get bid
       let bid = bids.find(bid => bid.id === id);
 
       if (!bid)
         throw new Error('Bid could not be found');
 
-      if ( bid.creatorId !== userId)
-          throw new Error('You are only authorized to delete the bids you created');
+      if (bid.creatorId !== userId)
+        throw new Error('You are only authorized to delete the bids you created');
 
-    let deletedBidId = bid.id;
-    
-    bid.id =  NaN;
-    bid.description = '';
-    bid.name = '';
-    bid.status = 'Closed',
-    bid.startingPrice = -1;
-    bid.creatorId = NaN;
-    
-    return deletedBidId;    
+      let deletedBidId = bid.id;
+
+      bid.id = NaN;
+      bid.description = '';
+      bid.name = '';
+      bid.status = 'Closed',
+        bid.startingPrice = -1;
+      bid.creatorId = NaN;
+
+      return deletedBidId;
 
     }
 
@@ -335,17 +386,17 @@ const verifyUser = (req: Express.Request) => {
   let userId = undefined;
   try {
     const Authorization = req.get('Authorization');
-    
+
     if (Authorization === undefined)
       throw new Error('Authorization bearer token not provided.');
 
     const token = Authorization.replace('Bearer ', '');
-   
+
     userId = Number(jwt.verify(token, SECRET));
 
   }
-  catch (error) {   
-    throw new Error(error);   
+  catch (error) {
+    throw new Error(error);
   }
   // end-of-util
 

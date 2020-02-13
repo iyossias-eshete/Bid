@@ -7,7 +7,7 @@ exports.up = function(knex) {
       table.string('firstName').notNullable();
       table.string('lastName').notNullable();
       table.integer('accountNumber').notNullable();
-      table.string('string').notNullable();      
+      table.string('sex').notNullable();      
   
       table.timestamps( true, true );  
   
