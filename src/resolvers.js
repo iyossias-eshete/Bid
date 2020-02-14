@@ -52,7 +52,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var bcryptjs_1 = __importDefault(require("bcryptjs"));
+var token_util_1 = __importDefault(require("./utils/token.util"));
+var bid_model_1 = __importDefault(require("./models/bid.model"));
 var SECRET = 'SECRET';
+;
 ;
 ;
 //data source
@@ -173,10 +176,10 @@ var signInUser = function (email, password) { return __awaiter(void 0, void 0, v
             case 2:
                 validPassword = _a.sent();
                 if (!validPassword)
-                    throw new Error('Invalid user name or Password');
+                    throw new Error('Invalid login user name or Password');
                 token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
                 return [2 /*return*/, { user: user, token: token }];
-            case 3: throw new Error('Your account does not exist.');
+            case 3: throw new Error('Invalid login information');
             case 4:
                 error_2 = _a.sent();
                 throw new Error(error_2);
@@ -199,6 +202,56 @@ var bidCreator = function (bid, userId) { return __awaiter(void 0, void 0, void 
         return [2 /*return*/, userBid];
     });
 }); };
+var createBid = function (bid, req) { return __awaiter(void 0, void 0, void 0, function () {
+    var userId, newBid;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userId = token_util_1.default.getIdFromToken(req);
+                return [4 /*yield*/, bid_model_1.default.query().insert(__assign(__assign({}, bid), { status: 'Open', creatorId: userId }))];
+            case 1:
+                newBid = _a.sent();
+                return [2 /*return*/, newBid];
+        }
+    });
+}); };
+var updateBid = function (bid, req) { return __awaiter(void 0, void 0, void 0, function () {
+    var userId, oldBid, updatedBid, updateStatus, error_3;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 4, , 5]);
+                userId = token_util_1.default.getIdFromToken(req);
+                return [4 /*yield*/, bid_model_1.default.query().findById(bid.id)];
+            case 1:
+                oldBid = _a.sent();
+                if (!oldBid) return [3 /*break*/, 3];
+                if (oldBid.creatorId !== userId)
+                    throw new Error('You are only authorized to update bids you created');
+                updatedBid = {
+                    id: oldBid.id,
+                    creatorId: oldBid.creatorId,
+                    status: bid.status ? bid.status : oldBid.status,
+                    description: bid.description ? bid.description : oldBid.description,
+                    name: bid.name ? bid.name : oldBid.name,
+                    startingPrice: bid.startingPrice ? bid.startingPrice : oldBid.startingPrice
+                };
+                return [4 /*yield*/, bid_model_1.default.query()
+                        .findById(bid.id)
+                        .patch(__assign({}, updatedBid))];
+            case 2:
+                updateStatus = _a.sent();
+                if (!updateStatus)
+                    throw new Error('Update failed');
+                return [2 /*return*/, updatedBid];
+            case 3: throw new Error('Bid does not exist');
+            case 4:
+                error_3 = _a.sent();
+                throw new Error(error_3);
+            case 5: return [2 /*return*/];
+        }
+    });
+}); };
 var resolvers = {
     Query: {
         users: function () { return users; },
@@ -208,15 +261,15 @@ var resolvers = {
         register: function (parent, _a, context) {
             var email = _a.email, password = _a.password, firstName = _a.firstName, lastName = _a.lastName, accountNumber = _a.accountNumber, sex = _a.sex;
             return __awaiter(void 0, void 0, void 0, function () {
-                var newUser, AuthenticatedUserData;
+                var newUser, registeredUserData;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
                             newUser = { email: email, password: password, firstName: firstName, lastName: lastName, accountNumber: accountNumber, sex: sex };
                             return [4 /*yield*/, registerUser(newUser)];
                         case 1:
-                            AuthenticatedUserData = _b.sent();
-                            return [2 /*return*/, AuthenticatedUserData];
+                            registeredUserData = _b.sent();
+                            return [2 /*return*/, registeredUserData];
                     }
                 });
             });
@@ -225,10 +278,13 @@ var resolvers = {
         signIn: function (parent, _a, context) {
             var email = _a.email, password = _a.password;
             return __awaiter(void 0, void 0, void 0, function () {
+                var AuthenticatedUserData;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0: return [4 /*yield*/, signInUser(email, password)];
-                        case 1: return [2 /*return*/, _b.sent()];
+                        case 1:
+                            AuthenticatedUserData = _b.sent();
+                            return [2 /*return*/, AuthenticatedUserData];
                     }
                 });
             });
@@ -236,49 +292,33 @@ var resolvers = {
         createBid: function (parent, _a, context) {
             var name = _a.name, description = _a.description, startingPrice = _a.startingPrice;
             return __awaiter(void 0, void 0, void 0, function () {
-                var userId, Authorization, token, newBid;
+                var newBid, createdBid;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
-                            userId = undefined;
-                            //util
-                            try {
-                                Authorization = context.req.get('Authorization');
-                                if (Authorization === undefined)
-                                    throw new Error('Authorization bearer token not provided.');
-                                token = Authorization.replace('Bearer ', '');
-                                userId = Number(jsonwebtoken_1.default.verify(token, SECRET));
-                            }
-                            catch (error) {
-                                throw new Error(error);
-                            }
-                            newBid = { id: -1, name: name, description: description, startingPrice: startingPrice, status: 'Open', creatorId: -1 };
-                            return [4 /*yield*/, bidCreator(newBid, userId)];
+                            newBid = { name: name, description: description, startingPrice: startingPrice };
+                            return [4 /*yield*/, createBid(newBid, context.req)];
                         case 1:
-                            newBid = _b.sent();
-                            return [2 /*return*/, newBid];
+                            createdBid = _b.sent();
+                            return [2 /*return*/, createdBid];
                     }
                 });
             });
         },
         //updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid 
         updateBid: function (parent, _a, context) {
-            var id = _a.id, name = _a.name, description = _a.description, startingPrice = _a.startingPrice, status = _a.status;
+            var id = _a.id, name = _a.name, description = _a.description, startingPrice = _a.startingPrice, status = _a.status, creatorId = _a.creatorId;
             return __awaiter(void 0, void 0, void 0, function () {
-                var userId, bid;
+                var oldBid, updatedBid;
                 return __generator(this, function (_b) {
-                    userId = verifyUser(context.req);
-                    bid = bids.find(function (bid) { return bid.id === id; });
-                    if (!bid)
-                        throw new Error('Bid could not be found');
-                    if (bid.creatorId !== userId)
-                        throw new Error('You are only authorized to update the bids you created');
-                    //updates bid in the array obj
-                    bid.name = name ? name.toString() : bid.name;
-                    bid.description = description ? description.toString() : bid.description;
-                    bid.startingPrice = startingPrice ? Number(startingPrice) : bid.startingPrice;
-                    bid.status = status ? status : bid.status;
-                    return [2 /*return*/, bid];
+                    switch (_b.label) {
+                        case 0:
+                            oldBid = { id: id, name: name, description: description, startingPrice: startingPrice, status: status, creatorId: creatorId };
+                            return [4 /*yield*/, updateBid(oldBid, context.req)];
+                        case 1:
+                            updatedBid = _b.sent();
+                            return [2 /*return*/, updatedBid];
+                    }
                 });
             });
         },

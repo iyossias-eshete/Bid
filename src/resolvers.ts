@@ -1,10 +1,12 @@
 import { IResolvers } from "apollo-server-express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs"
+import tokenUtils from "./utils/token.util";
+import Bid from "./models/bid.model";
 
 const SECRET = 'SECRET';
 
-interface userToBeCreatedType {
+interface UserToBeCreatedType {
   email: string,
   firstName: string,
   lastName: string,
@@ -13,24 +15,24 @@ interface userToBeCreatedType {
   sex: string
 }
 
-interface userType extends userToBeCreatedType {
+interface UserType extends UserToBeCreatedType {
   id: number
 };
 
-
-
-
-interface BidType {
+interface BidType extends BidToBeCreatedType {
   id: number,
-  name: string,
-  description: string,
-  startingPrice: number,
   creatorId: number
   status: string,
+};
+
+interface BidToBeCreatedType {
+  name: string,
+  description: string,
+  startingPrice: number
 }
 
 interface authenticatedUserType {
-  user: userType,
+  user: UserType,
   token: string
 };
 
@@ -110,7 +112,7 @@ const bids = [
 import User from "./models/user.model";
 import Account from "./models/account.model";
 
-const registerUser = async (user: userToBeCreatedType) => {
+const registerUser = async (user: UserToBeCreatedType) => {
   try {
     user.password = (await bcrypt.hash(user.password.toString(), 10)).toString();
 
@@ -134,7 +136,7 @@ const registerUser = async (user: userToBeCreatedType) => {
 
       //console.log('I am user spread out');
       //console.log({...user});
-      const registeredUser: userType = await User.query().insert({
+      const registeredUser: UserType = await User.query().insert({
         ...user
       });
 
@@ -152,32 +154,27 @@ const registerUser = async (user: userToBeCreatedType) => {
     throw new Error(error);
   }
 
-  /*const logins = await Logins.query().insert({
-    email: (req as any).body.email,
-    password: hashedPassword
-  });*/
-
 }
 
 const signInUser = async (email: string, password: string) => {
   //get user
-  try {    
+  try {
     const userMatch = await User.query()
       .select('*')
       .where('email', '=', email);
     if (userMatch.length) {
       let user = userMatch[0];
       const validPassword = await bcrypt.compare(password, user.password);
-      
+
       if (!validPassword)
         throw new Error('Invalid login user name or Password');
-      
+
       let token = jwt.sign(user.id.toString(), SECRET);
-      
+
       return { user, token };
     }
-      throw new Error('Invalid login information');
-    
+    throw new Error('Invalid login information');
+
   }
   catch (error) {
     throw new Error(error);
@@ -208,6 +205,57 @@ const bidCreator = async (bid: BidType, userId: number) => {
 
 }
 
+const createBid = async (bid: BidToBeCreatedType, req: Request) => {
+  // get creator id
+  const userId = tokenUtils.getIdFromToken(req);
+  const newBid = await Bid.query().insert({
+    ...bid,
+    status: 'Open',
+    creatorId: userId
+  });
+  return newBid;
+  // return a BID TYPE
+};
+
+const updateBid = async (bid: BidType, req: Request) => {
+  try {
+    // get creator id
+    const userId = tokenUtils.getIdFromToken(req);
+    const oldBid = await Bid.query().findById(bid.id);
+    if (oldBid) {
+      if (oldBid.creatorId !== userId)
+        throw new Error('You are only authorized to update bids you created');
+
+      const updatedBid: BidType = {
+        id: oldBid.id,
+        creatorId: oldBid.creatorId,
+        status: bid.status ? bid.status : oldBid.status,
+        description: bid.description ? bid.description : oldBid.description,
+        name: bid.name ? bid.name : oldBid.name,
+        startingPrice: bid.startingPrice ? bid.startingPrice : oldBid.startingPrice
+      };
+
+      const updateStatus = await Bid.query()
+        .findById(bid.id)
+        .patch({
+         ...updatedBid
+        });
+      
+        if(!updateStatus)
+          throw new Error('Update failed');
+      return updatedBid;
+
+    }
+    throw new Error('Bid does not exist');
+  }
+  catch (error) {
+    throw new Error(error);
+  }
+
+};
+
+
+
 const resolvers: IResolvers = {
   Query: {
     users: () => users,
@@ -217,71 +265,28 @@ const resolvers: IResolvers = {
   Mutation: {
 
     register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context) => {
-      let newUser: userToBeCreatedType = { email, password, firstName, lastName, accountNumber, sex };
-
-      let AuthenticatedUserData: authenticatedUserType = await registerUser(newUser);
-      return AuthenticatedUserData;
+      let newUser: UserToBeCreatedType = { email, password, firstName, lastName, accountNumber, sex };
+      let registeredUserData: authenticatedUserType = await registerUser(newUser);
+      return registeredUserData;
     },
     //TODO: do signIn
     signIn: async (parent, { email, password }, context) => {
-      return await signInUser(email, password) ;
+      let AuthenticatedUserData: authenticatedUserType = await signInUser(email, password);
+      return AuthenticatedUserData;
     },
 
 
     createBid: async (parent, { name, description, startingPrice }, context) => {
-
-      let userId = undefined;
-
-      //util
-      try {
-        const Authorization = context.req.get('Authorization');
-
-        if (Authorization === undefined)
-          throw new Error('Authorization bearer token not provided.');
-
-        const token = Authorization.replace('Bearer ', '');
-
-        userId = Number(jwt.verify(token, SECRET));
-
-      }
-      catch (error) {
-
-        throw new Error(error);
-
-
-      }
-      // end-of-util
-
-
-      let newBid: BidType = { id: -1, name, description, startingPrice, status: 'Open', creatorId: -1 };
-      newBid = await bidCreator(newBid, userId);
-      return newBid;
-
+      let newBid: BidToBeCreatedType = { name, description, startingPrice };
+      let createdBid: BidType = await createBid(newBid, context.req);
+      return createdBid;
     },
 
     //updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid 
-    updateBid: async (parent, { id, name, description, startingPrice, status }, context) => {
-      // verify that the user is authorized to update the bid
-      let userId = verifyUser(context.req);
-
-      //get bid
-      const bid = bids.find(bid => bid.id === id);
-
-      if (!bid)
-        throw new Error('Bid could not be found');
-
-      if (bid.creatorId !== userId)
-        throw new Error('You are only authorized to update the bids you created');
-
-
-      //updates bid in the array obj
-      bid.name = name ? name.toString() : bid.name;
-      bid.description = description ? description.toString() : bid.description;
-      bid.startingPrice = startingPrice ? Number(startingPrice) : bid.startingPrice;
-      bid.status = status ? status : bid.status;
-
-      return bid;
-
+    updateBid: async (parent, { id, name, description, startingPrice, status, creatorId }, context) => {
+      let oldBid: BidType = { id, name, description, startingPrice, status, creatorId };
+      let updatedBid = await updateBid(oldBid, context.req);
+      return updatedBid;
     },
 
     deleteBid: async (parent, { id }, context) => {
