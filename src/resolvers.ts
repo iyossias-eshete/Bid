@@ -4,8 +4,17 @@ import bcrypt from "bcryptjs"
 
 const SECRET = 'SECRET';
 
+interface userToBeCreatedType {
+  email: string,
+  firstName: string,
+  lastName: string,
+  password: string,
+  accountNumber: number,
+  sex: string
+}
+
 interface userType {
-  id: number,
+  id: number ,
   email: string,
   firstName: string,
   lastName: string,
@@ -13,6 +22,8 @@ interface userType {
   accountNumber: number,
   sex: string
 };
+
+
 
 interface BidType {
   id: number,
@@ -65,56 +76,6 @@ const accounts = [
   }
 ];
 
-const users = [
-  // {
-  //   id: 1,
-  //   email: 'Liam@gmail.com',
-  //   firstName: 'liam',
-  //   lastName: 'Nelson',
-  //   accountNumber: 2,
-  //   sex: "Male",
-  //   password:'ajksdhjashdjksa277319812'
-  // },
-  {
-    id: 2,
-    email: 'Benji@gmail.com',
-    firstName: 'Benjamin',
-    lastName: 'Loyd',
-    accountNumber: 4,
-    sex: "Male",
-    password: 'ajksdhjashdjksa277319812'
-  },
-  {
-    id: 4,
-    email: 'Liya@gmail.com',
-    firstName: 'Tres',
-    lastName: 'Loy',
-    accountNumber: 5,
-    sex: "Female",
-    password: 'ajksdhjashdjksa277319812'
-  },
-  {
-    id: 3,
-    email: 'Glena@gmail.com',
-    firstName: 'Glen',
-    lastName: 'Lo',
-    accountNumber: 7,
-    sex: "Female",
-    password: 'ajksdhjashdjksa277319812'
-  },
-  {
-    id: 5,
-    firstName: "LeRoY",
-    lastName: "sAnE",
-    email: "Leroy@ManCity.com",
-    accountNumber: 1,
-    sex: "Male",
-    password: "$2a$10$adJvj/GLNx7O0qH1XGRLX.NHUEbHDrmoOQxS1KuDQENrCDx7UMRmK" //ManCity
-    //bearer eyJhbGciOiJIUzI1NiJ9.NQ.iDIkQeIGNPBDihC2GVVoC1bIKjLiQMiEhMN2ebkeMsI
-  }
-
-
-];
 
 const bids = [
   {
@@ -154,7 +115,7 @@ const bids = [
 import User from "./models/user.model";
 import Account from "./models/account.model";
 
-const registerUser = async (user: userType) => {
+const registerUser = async (user: userToBeCreatedType) => {
   try {
     user.password = (await bcrypt.hash(user.password.toString(), 10)).toString();
 
@@ -176,12 +137,17 @@ const registerUser = async (user: userType) => {
       if (existingAccount.holdersEmail !== user.email || existingAccount.holdersFirstName !== user.firstName || existingAccount.holdersLastName !== user.lastName)
         throw new Error('Account number you specified belongs to someone else');
 
-
-      const registeredUser = await User.query().insert({
+      //console.log('I am user spread out');
+      //console.log({...user});
+      const registeredUser : userType = await User.query().insert({
         ...user
       });
-
-      return registerUser;
+      console.log('RU id');
+      console.log(registeredUser.id);
+      let token = jwt.sign( String(registeredUser.id) , SECRET);
+      console.log('Sending user with token');
+      console.log( registeredUser, token);
+      return { user : registeredUser, token} ;
 
     };
 
@@ -268,7 +234,7 @@ const resolvers: IResolvers = {
   Mutation: {
 
     register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context) => {
-      let newUser: userType = { id: -1, email, password, firstName, lastName, accountNumber, sex };
+      let newUser: userToBeCreatedType = { email, password, firstName, lastName, accountNumber, sex };
 
       let AuthenticatedUserData: authenticatedUserType = await registerUser(newUser);
       return AuthenticatedUserData;

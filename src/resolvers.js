@@ -167,7 +167,7 @@ var bids = [
 var user_model_1 = __importDefault(require("./models/user.model"));
 var account_model_1 = __importDefault(require("./models/account.model"));
 var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, userExists, existingAccount, registeredUser, error_1;
+    var _a, userExists, existingAccount, registeredUser, token, error_1;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -192,7 +192,12 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
                 return [4 /*yield*/, user_model_1.default.query().insert(__assign({}, user))];
             case 4:
                 registeredUser = _b.sent();
-                return [2 /*return*/, registerUser];
+                console.log('RU id');
+                console.log(registeredUser.id);
+                token = jsonwebtoken_1.default.sign(String(registeredUser.id), SECRET);
+                console.log('Sending user with token');
+                console.log(registeredUser, token);
+                return [2 /*return*/, { user: registeredUser, token: token }];
             case 5:
                 ;
                 throw new Error('Please enter a vaild account. The account does not belong to you');
@@ -267,7 +272,7 @@ var resolvers = {
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
-                            newUser = { id: -1, email: email, password: password, firstName: firstName, lastName: lastName, accountNumber: accountNumber, sex: sex };
+                            newUser = { email: email, password: password, firstName: firstName, lastName: lastName, accountNumber: accountNumber, sex: sex };
                             return [4 /*yield*/, registerUser(newUser)];
                         case 1:
                             AuthenticatedUserData = _b.sent();
