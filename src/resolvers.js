@@ -82,54 +82,6 @@ var accounts = [
         amount: 1000
     }
 ];
-var users = [
-    // {
-    //   id: 1,
-    //   email: 'Liam@gmail.com',
-    //   firstName: 'liam',
-    //   lastName: 'Nelson',
-    //   accountNumber: 2,
-    //   sex: "Male",
-    //   password:'ajksdhjashdjksa277319812'
-    // },
-    {
-        id: 2,
-        email: 'Benji@gmail.com',
-        firstName: 'Benjamin',
-        lastName: 'Loyd',
-        accountNumber: 4,
-        sex: "Male",
-        password: 'ajksdhjashdjksa277319812'
-    },
-    {
-        id: 4,
-        email: 'Liya@gmail.com',
-        firstName: 'Tres',
-        lastName: 'Loy',
-        accountNumber: 5,
-        sex: "Female",
-        password: 'ajksdhjashdjksa277319812'
-    },
-    {
-        id: 3,
-        email: 'Glena@gmail.com',
-        firstName: 'Glen',
-        lastName: 'Lo',
-        accountNumber: 7,
-        sex: "Female",
-        password: 'ajksdhjashdjksa277319812'
-    },
-    {
-        id: 5,
-        firstName: "LeRoY",
-        lastName: "sAnE",
-        email: "Leroy@ManCity.com",
-        accountNumber: 1,
-        sex: "Male",
-        password: "$2a$10$adJvj/GLNx7O0qH1XGRLX.NHUEbHDrmoOQxS1KuDQENrCDx7UMRmK" //ManCity
-        //bearer eyJhbGciOiJIUzI1NiJ9.NQ.iDIkQeIGNPBDihC2GVVoC1bIKjLiQMiEhMN2ebkeMsI
-    }
-];
 var bids = [
     {
         id: 1,
@@ -192,11 +144,7 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
                 return [4 /*yield*/, user_model_1.default.query().insert(__assign({}, user))];
             case 4:
                 registeredUser = _b.sent();
-                console.log('RU id');
-                console.log(registeredUser.id);
                 token = jsonwebtoken_1.default.sign(String(registeredUser.id), SECRET);
-                console.log('Sending user with token');
-                console.log(registeredUser, token);
                 return [2 /*return*/, { user: registeredUser, token: token }];
             case 5:
                 ;
@@ -208,42 +156,34 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
         }
     });
 }); };
-/*
-const registerUser = async (user: userType) => {
-  //TODO: check for unique email
-
-  //encrypt password
-  user.password = (await bcrypt.hash(user.password.toString(), 10)).toString();
-
-  //verify specified account
-  let userAccount = accounts.find(account => account.accountNumber === user.accountNumber
-    && account.accountHolderFirstName.toLowerCase() === user.firstName.toLowerCase()
-    && account.accountHolderLastName.toLowerCase() === user.lastName.toLowerCase());
-  if (!userAccount)
-    throw new Error('Invalid Bank Account');
-
-  // check if account already exists
-
-  let existingAccount = users.find(existingUser => existingUser.accountNumber === user.accountNumber);
-  if (existingAccount)
-    throw new Error('You already have an account. Try logging in instead');
-  //userType
-
-  //store user
-  user.id = users.length + 1;
-  users.push(user);
-
-  //generate token
-  let token = jwt.sign(user.id.toString(), SECRET);
-
-  //send user with token
-  return {
-    token,
-    user
-  }
-
-};
-*/
+var signInUser = function (email, password) { return __awaiter(void 0, void 0, void 0, function () {
+    var userMatch, user, validPassword, token, error_2;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 4, , 5]);
+                return [4 /*yield*/, user_model_1.default.query()
+                        .select('*')
+                        .where('email', '=', email)];
+            case 1:
+                userMatch = _a.sent();
+                if (!userMatch.length) return [3 /*break*/, 3];
+                user = userMatch[0];
+                return [4 /*yield*/, bcryptjs_1.default.compare(password, user.password)];
+            case 2:
+                validPassword = _a.sent();
+                if (!validPassword)
+                    throw new Error('Invalid user name or Password');
+                token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
+                return [2 /*return*/, { user: user, token: token }];
+            case 3: throw new Error('Your account does not exist.');
+            case 4:
+                error_2 = _a.sent();
+                throw new Error(error_2);
+            case 5: return [2 /*return*/];
+        }
+    });
+}); };
 var accountVerifier = function () {
     //email check
     //
@@ -285,23 +225,10 @@ var resolvers = {
         signIn: function (parent, _a, context) {
             var email = _a.email, password = _a.password;
             return __awaiter(void 0, void 0, void 0, function () {
-                var user, validPassword, token;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
-                        case 0:
-                            user = users.find(function (user) { return user.email === email; });
-                            if (!user) {
-                                throw new Error('Your account does not exist.');
-                            }
-                            return [4 /*yield*/, bcryptjs_1.default.compare(password, user.password)];
-                        case 1:
-                            validPassword = _b.sent();
-                            if (!validPassword) {
-                                throw new Error('Invalid email or password');
-                            }
-                            token = jsonwebtoken_1.default.sign(user.id.toString(), SECRET);
-                            //send user
-                            return [2 /*return*/, { user: user, token: token }];
+                        case 0: return [4 /*yield*/, signInUser(email, password)];
+                        case 1: return [2 /*return*/, _b.sent()];
                     }
                 });
             });

@@ -13,15 +13,10 @@ interface userToBeCreatedType {
   sex: string
 }
 
-interface userType {
-  id: number ,
-  email: string,
-  firstName: string,
-  lastName: string,
-  password: string,
-  accountNumber: number,
-  sex: string
+interface userType extends userToBeCreatedType {
+  id: number
 };
+
 
 
 
@@ -139,21 +134,18 @@ const registerUser = async (user: userToBeCreatedType) => {
 
       //console.log('I am user spread out');
       //console.log({...user});
-      const registeredUser : userType = await User.query().insert({
+      const registeredUser: userType = await User.query().insert({
         ...user
       });
-      console.log('RU id');
-      console.log(registeredUser.id);
-      let token = jwt.sign( String(registeredUser.id) , SECRET);
-      console.log('Sending user with token');
-      console.log( registeredUser, token);
-      return { user : registeredUser, token} ;
+
+      let token = jwt.sign(String(registeredUser.id), SECRET);
+      return { user: registeredUser, token };
 
     };
 
     throw new Error('Please enter a vaild account. The account does not belong to you');
 
-    
+
   }
 
   catch (error) {
@@ -166,42 +158,33 @@ const registerUser = async (user: userToBeCreatedType) => {
   });*/
 
 }
-/*
-const registerUser = async (user: userType) => {
-  //TODO: check for unique email
 
-  //encrypt password
-  user.password = (await bcrypt.hash(user.password.toString(), 10)).toString();
-
-  //verify specified account
-  let userAccount = accounts.find(account => account.accountNumber === user.accountNumber
-    && account.accountHolderFirstName.toLowerCase() === user.firstName.toLowerCase()
-    && account.accountHolderLastName.toLowerCase() === user.lastName.toLowerCase());
-  if (!userAccount)
-    throw new Error('Invalid Bank Account');
-
-  // check if account already exists
-
-  let existingAccount = users.find(existingUser => existingUser.accountNumber === user.accountNumber);
-  if (existingAccount)
-    throw new Error('You already have an account. Try logging in instead');
-  //userType
-
-  //store user
-  user.id = users.length + 1;
-  users.push(user);
-
-  //generate token
-  let token = jwt.sign(user.id.toString(), SECRET);
-
-  //send user with token
-  return {
-    token,
-    user
+const signInUser = async (email: string, password: string) => {
+  //get user
+  try {    
+    const userMatch = await User.query()
+      .select('*')
+      .where('email', '=', email);
+    if (userMatch.length) {
+      let user = userMatch[0];
+      const validPassword = await bcrypt.compare(password, user.password);
+      
+      if (!validPassword)
+        throw new Error('Invalid login user name or Password');
+      
+      let token = jwt.sign(user.id.toString(), SECRET);
+      
+      return { user, token };
+    }
+      throw new Error('Invalid login information');
+    
   }
+  catch (error) {
+    throw new Error(error);
+  }
+}
 
-};
-*/
+
 
 const accountVerifier = () => {
   //email check
@@ -241,24 +224,7 @@ const resolvers: IResolvers = {
     },
     //TODO: do signIn
     signIn: async (parent, { email, password }, context) => {
-
-      //get user
-
-      const user = users.find(user => user.email === email);
-      if (!user) {
-        throw new Error('Your account does not exist.');
-      }
-
-      //check password
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
-        throw new Error('Invalid email or password');
-      }
-      //assign token
-      let token = jwt.sign(user.id.toString(), SECRET);
-
-      //send user
-      return { user, token };
+      return await signInUser(email, password) ;
     },
 
 
