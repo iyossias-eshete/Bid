@@ -208,6 +208,7 @@ var createBid = function (bid, req) { return __awaiter(void 0, void 0, void 0, f
         switch (_a.label) {
             case 0:
                 userId = token_util_1.default.getIdFromToken(req);
+                console.log('User id is ', userId);
                 return [4 /*yield*/, bid_model_1.default.query().insert(__assign(__assign({}, bid), { status: 'Open', creatorId: userId }))];
             case 1:
                 newBid = _a.sent();
@@ -248,6 +249,37 @@ var updateBid = function (bid, req) { return __awaiter(void 0, void 0, void 0, f
             case 4:
                 error_3 = _a.sent();
                 throw new Error(error_3);
+            case 5: return [2 /*return*/];
+        }
+    });
+}); };
+var deleteBid = function (bidId, req) { return __awaiter(void 0, void 0, void 0, function () {
+    var userId, bidToDelete, deleteStatus, error_4;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 4, , 5]);
+                userId = token_util_1.default.getIdFromToken(req);
+                return [4 /*yield*/, bid_model_1.default.query().findById(bidId)];
+            case 1:
+                bidToDelete = _a.sent();
+                if (!bidToDelete) return [3 /*break*/, 3];
+                console.log('Here1');
+                if (bidToDelete.creatorId !== userId)
+                    throw new Error('You are only authorized to delete bids you created');
+                console.log('Here2');
+                return [4 /*yield*/, bid_model_1.default.query().deleteById(bidId)];
+            case 2:
+                deleteStatus = _a.sent();
+                console.log('Here3');
+                if (!deleteStatus)
+                    throw new Error('Delete failed');
+                console.log('Here4');
+                return [2 /*return*/, bidToDelete];
+            case 3: throw new Error('Bid does not exist');
+            case 4:
+                error_4 = _a.sent();
+                throw new Error(error_4);
             case 5: return [2 /*return*/];
         }
     });
@@ -325,22 +357,18 @@ var resolvers = {
         deleteBid: function (parent, _a, context) {
             var id = _a.id;
             return __awaiter(void 0, void 0, void 0, function () {
-                var userId, bid, deletedBidId;
+                var deletedBid;
                 return __generator(this, function (_b) {
-                    userId = verifyUser(context.req);
-                    bid = bids.find(function (bid) { return bid.id === id; });
-                    if (!bid)
-                        throw new Error('Bid could not be found');
-                    if (bid.creatorId !== userId)
-                        throw new Error('You are only authorized to delete the bids you created');
-                    deletedBidId = bid.id;
-                    bid.id = NaN;
-                    bid.description = '';
-                    bid.name = '';
-                    bid.status = 'Closed',
-                        bid.startingPrice = -1;
-                    bid.creatorId = NaN;
-                    return [2 /*return*/, deletedBidId];
+                    switch (_b.label) {
+                        case 0:
+                            console.log('Id is of type');
+                            console.log(typeof id);
+                            return [4 /*yield*/, deleteBid(id, context.req)];
+                        case 1:
+                            deletedBid = _b.sent();
+                            console.log('Here 5');
+                            return [2 /*return*/, deletedBid];
+                    }
                 });
             });
         }

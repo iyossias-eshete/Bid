@@ -36,15 +36,6 @@ interface authenticatedUserType {
   token: string
 };
 
-interface bidType {
-  id: number,
-  name: string,
-  description: string,
-  startingPrice: number,
-  creatorId: number
-}
-
-
 //data source
 const accounts = [
   {
@@ -208,6 +199,7 @@ const bidCreator = async (bid: BidType, userId: number) => {
 const createBid = async (bid: BidToBeCreatedType, req: Request) => {
   // get creator id
   const userId = tokenUtils.getIdFromToken(req);
+  console.log('User id is ' , userId);
   const newBid = await Bid.query().insert({
     ...bid,
     status: 'Open',
@@ -238,11 +230,11 @@ const updateBid = async (bid: BidType, req: Request) => {
       const updateStatus = await Bid.query()
         .findById(bid.id)
         .patch({
-         ...updatedBid
+          ...updatedBid
         });
-      
-        if(!updateStatus)
-          throw new Error('Update failed');
+
+      if (!updateStatus)
+        throw new Error('Update failed');
       return updatedBid;
 
     }
@@ -253,6 +245,26 @@ const updateBid = async (bid: BidType, req: Request) => {
   }
 
 };
+
+const deleteBid = async (bidId: number, req: Request) => {
+  try {
+    // get creator id
+    const userId = tokenUtils.getIdFromToken(req);
+    const bidToDelete = await Bid.query().findById(bidId);
+    if (bidToDelete) {
+      if (bidToDelete.creatorId !== userId)
+        throw new Error('You are only authorized to delete bids you created');
+      const deleteStatus = await Bid.query().deleteById(bidId);
+      if (!deleteStatus)
+        throw new Error('Delete failed');
+      return bidToDelete;
+    }
+    throw new Error('Bid does not exist');
+  }
+  catch (error) {
+    throw new Error(error);
+  }
+}
 
 
 
@@ -285,34 +297,15 @@ const resolvers: IResolvers = {
     //updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid 
     updateBid: async (parent, { id, name, description, startingPrice, status, creatorId }, context) => {
       let oldBid: BidType = { id, name, description, startingPrice, status, creatorId };
-      let updatedBid = await updateBid(oldBid, context.req);
+      let updatedBid: BidType = await updateBid(oldBid, context.req);
       return updatedBid;
     },
 
     deleteBid: async (parent, { id }, context) => {
-      // verify that the user is authorized to update the bid
-      let userId = verifyUser(context.req);
-
-      //get bid
-      let bid = bids.find(bid => bid.id === id);
-
-      if (!bid)
-        throw new Error('Bid could not be found');
-
-      if (bid.creatorId !== userId)
-        throw new Error('You are only authorized to delete the bids you created');
-
-      let deletedBidId = bid.id;
-
-      bid.id = NaN;
-      bid.description = '';
-      bid.name = '';
-      bid.status = 'Closed',
-        bid.startingPrice = -1;
-      bid.creatorId = NaN;
-
-      return deletedBidId;
-
+      console.log('Id is of type');
+      console.log(typeof id);
+      let deletedBid = await deleteBid(id,context.req);
+      return deletedBid;
     }
 
   }

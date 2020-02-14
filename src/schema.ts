@@ -60,7 +60,7 @@ type Bid{
     signIn(email: String!, password: String!) : AuthenticatedUser
     createBid(name: String!, description: String!, startingPrice: Float) : Bid
     updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid
-    deleteBid(id: Int!) : Int
+    deleteBid(id: Int!) : Bid
     
     #next todo
     #placeBid( bidId: Int!, price: Float!) : Boolean 
