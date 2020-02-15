@@ -11,6 +11,10 @@ exports.up = function (knex) {
             .inTable('user')
             .onDelete('CASCADE')
             .index();
+        table.integer('awardedTo')
+            .references('id')
+            .inTable('user')
+            .index();
 
         table.timestamps(true, true);
     });

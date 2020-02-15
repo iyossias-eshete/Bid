@@ -29,7 +29,8 @@ var Bid = /** @class */ (function (_super) {
             description: { type: 'string' },
             startingPrice: { type: 'number' },
             creatorId: { type: 'number' },
-            status: { type: 'string' }
+            status: { type: 'string' },
+            awardedTo: { type: 'number' }
         }
     };
     return Bid;

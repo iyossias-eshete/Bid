@@ -19,14 +19,14 @@ var UsersBid = /** @class */ (function (_super) {
     function UsersBid() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    UsersBid.tableName = 'users_bid';
+    UsersBid.tableName = 'usersBid';
     UsersBid.jsonSchema = {
         type: 'object',
-        required: ['userId', 'bidId', 'bidAmount'],
+        required: ['userId', 'bidId', 'amount'],
         properties: {
             userId: { type: 'number' },
             bidId: { type: 'number' },
-            bidAmount: { type: 'number' },
+            amount: { type: 'number' },
         }
     };
     return UsersBid;

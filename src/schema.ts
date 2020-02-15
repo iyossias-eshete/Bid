@@ -44,6 +44,13 @@ type Bid{
   startingPrice : Float
   creatorId : Int
   status : BidStatus
+  awardedTo: Int
+}
+
+type UsersBid{
+  userId : Int
+  bidId : Int
+  amount : Float
 }
 
    type Query {
@@ -61,7 +68,8 @@ type Bid{
     createBid(name: String!, description: String!, startingPrice: Float) : Bid
     updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid
     deleteBid(id: Int!) : Bid
-    
+    placeBid( bidId : Int!, amount : Float ) : UsersBid
+    awardBid(bidId : Int!, userId : Int! ) : Bid
     #next todo
     #placeBid( bidId: Int!, price: Float!) : Boolean 
     #awardBid

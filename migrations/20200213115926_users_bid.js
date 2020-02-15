@@ -15,6 +15,9 @@ exports.up = function (knex) {
             .onDelete('CASCADE')
             .index();
 
+        table.float('amount')
+            .notNullable();
+
         table.timestamps(true, true);
     });
 };

@@ -54,73 +54,13 @@ var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var bcryptjs_1 = __importDefault(require("bcryptjs"));
 var token_util_1 = __importDefault(require("./utils/token.util"));
 var bid_model_1 = __importDefault(require("./models/bid.model"));
+var user_model_1 = __importDefault(require("./models/user.model"));
+var account_model_1 = __importDefault(require("./models/account.model"));
+var users_bid_model_1 = __importDefault(require("./models/users_bid.model"));
 var SECRET = 'SECRET';
 ;
 ;
 ;
-//data source
-var accounts = [
-    {
-        accountNumber: 1,
-        accountHolderFirstName: 'Leroy',
-        accountHolderLastName: 'Sane',
-        amount: 500000
-    },
-    {
-        accountNumber: 2,
-        accountHolderFirstName: 'Thomas',
-        accountHolderLastName: 'Tukils',
-        amount: 2500000
-    },
-    {
-        accountNumber: 3,
-        accountHolderFirstName: 'Collins',
-        accountHolderLastName: 'Muller',
-        amount: 2500
-    },
-    {
-        accountNumber: 12,
-        accountHolderFirstName: 'Ben',
-        accountHolderLastName: 'Orlando',
-        amount: 1000
-    }
-];
-var bids = [
-    {
-        id: 1,
-        name: 'Paradise',
-        description: 'By Micheal Angelo. High quality imitation',
-        startingPrice: 100000,
-        creatorId: 1,
-        status: 'Open'
-    },
-    {
-        id: 2,
-        name: 'Jackson Gloves',
-        description: 'Micheal Jackson\'s original gold gloves.',
-        startingPrice: 5000000,
-        creatorId: 3,
-        status: 'Open'
-    },
-    {
-        id: 3,
-        status: 'Open',
-        name: 'The Medievals',
-        description: 'Poems collections from various ancient literates.',
-        startingPrice: 30000,
-        creatorId: 2,
-    },
-    {
-        id: 4,
-        name: 'The Mac',
-        description: '1974 Apple laptop. Still stunning.',
-        startingPrice: 2000,
-        creatorId: 4,
-        status: 'Open'
-    }
-];
-var user_model_1 = __importDefault(require("./models/user.model"));
-var account_model_1 = __importDefault(require("./models/account.model"));
 var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userExists, existingAccount, registeredUser, token, error_1;
     return __generator(this, function (_b) {
@@ -188,19 +128,15 @@ var signInUser = function (email, password) { return __awaiter(void 0, void 0, v
         }
     });
 }); };
-var accountVerifier = function () {
-    //email check
-    //
-};
-var bidCreator = function (bid, userId) { return __awaiter(void 0, void 0, void 0, function () {
-    var userBid;
+var getAllBids = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var bids;
     return __generator(this, function (_a) {
-        userBid = __assign({}, bid);
-        userBid.creatorId = userId;
-        userBid.id = bids.length + 1;
-        bids.push(userBid);
-        //send bid to user
-        return [2 /*return*/, userBid];
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, bid_model_1.default.query()];
+            case 1:
+                bids = _a.sent();
+                return [2 /*return*/, bids];
+        }
     });
 }); };
 var createBid = function (bid, req) { return __awaiter(void 0, void 0, void 0, function () {
@@ -281,10 +217,105 @@ var deleteBid = function (bidId, req) { return __awaiter(void 0, void 0, void 0,
         }
     });
 }); };
+var placeBid = function (usersBid, req) { return __awaiter(void 0, void 0, void 0, function () {
+    var userId, user, userBalance, bidStatus, maxPlaced, placedUserBid, error_5;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 7, , 8]);
+                console.log('Here 2');
+                userId = token_util_1.default.getIdFromToken(req);
+                return [4 /*yield*/, user_model_1.default.query().findById(userId)];
+            case 1:
+                user = _a.sent();
+                return [4 /*yield*/, account_model_1.default.query().select('amount').where('holdersEmail', '=', user.email)];
+            case 2:
+                userBalance = _a.sent();
+                if (userBalance[0].amount < usersBid.amount)
+                    throw new Error('You do not have enough balance in your account to place this bid.');
+                return [4 /*yield*/, bid_model_1.default.query()
+                        .select('status')
+                        .where('id', '=', usersBid.bidId)];
+            case 3:
+                bidStatus = _a.sent();
+                if (!bidStatus.length) return [3 /*break*/, 6];
+                console.log('Here 3.1');
+                if (bidStatus[0].status === 'Closed') {
+                    console.log('Here 3.2');
+                    throw new Error('This bid is closed');
+                }
+                console.log('Here 4');
+                return [4 /*yield*/, users_bid_model_1.default.query()
+                        .select('bidId')
+                        .where('bidId', '=', usersBid.bidId)
+                        .groupBy('bidId')
+                        .max('amount')];
+            case 4:
+                maxPlaced = _a.sent();
+                ;
+                if (maxPlaced.length) {
+                    if (maxPlaced[0].max > usersBid.amount)
+                        throw new Error('You can place a bid that is lower than the highest bid already placed. Please place a higher bid');
+                }
+                usersBid.userId = userId;
+                return [4 /*yield*/, users_bid_model_1.default.query().insert(__assign({}, usersBid))];
+            case 5:
+                placedUserBid = _a.sent();
+                console.log('Here 5');
+                return [2 /*return*/, placedUserBid];
+            case 6: throw new Error('Bid not found');
+            case 7:
+                error_5 = _a.sent();
+                throw new Error(error_5);
+            case 8: return [2 /*return*/];
+        }
+    });
+}); };
+var awardBid = function (bidId, userId, req) { return __awaiter(void 0, void 0, void 0, function () {
+    var userId_1, bidInfo, placedBid, awardedBid, error_6;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 6, , 7]);
+                userId_1 = token_util_1.default.getIdFromToken(req);
+                return [4 /*yield*/, bid_model_1.default.query()
+                        .select('status', 'creatorId')
+                        .where('id', '=', bidId)];
+            case 1:
+                bidInfo = _a.sent();
+                if (!bidInfo.length) return [3 /*break*/, 5];
+                if (bidInfo[0].status === 'Closed') {
+                    throw new Error('This bid can not be awarded because it is closed');
+                }
+                if (bidInfo[0].creatorId !== userId_1) {
+                    throw new Error('This bid is not yours to award');
+                }
+                return [4 /*yield*/, users_bid_model_1.default.query().select('amount').where('userId', '=', userId_1)];
+            case 2:
+                placedBid = _a.sent();
+                if (!placedBid.length) return [3 /*break*/, 4];
+                return [4 /*yield*/, bid_model_1.default.query().patchAndFetchById(bidId, {
+                        awardedTo: userId_1,
+                        status: 'Closed'
+                    })];
+            case 3:
+                awardedBid = _a.sent();
+                return [2 /*return*/, awardedBid];
+            case 4: throw new Error('You can not award the bid to someone who has not placed a bid');
+            case 5: throw new Error('Bid not found');
+            case 6:
+                error_6 = _a.sent();
+                throw new Error(error_6);
+            case 7: return [2 /*return*/];
+        }
+    });
+}); };
 var resolvers = {
     Query: {
         users: function () { return users; },
-        bids: function () { return bids; }
+        bids: function () { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+            return [2 /*return*/, getAllBids()];
+        }); }); }
     },
     Mutation: {
         register: function (parent, _a, context) {
@@ -364,6 +395,38 @@ var resolvers = {
                         case 1:
                             deletedBid = _b.sent();
                             return [2 /*return*/, deletedBid];
+                    }
+                });
+            });
+        },
+        placeBid: function (parent, _a, context) {
+            var bidId = _a.bidId, amount = _a.amount;
+            return __awaiter(void 0, void 0, void 0, function () {
+                var bidToPlace, palacedBid;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            bidToPlace = { bidId: bidId, amount: amount, userId: -1 };
+                            console.log('Here 1');
+                            return [4 /*yield*/, placeBid(bidToPlace, context.req)];
+                        case 1:
+                            palacedBid = _b.sent();
+                            console.log('Here 6');
+                            return [2 /*return*/, palacedBid];
+                    }
+                });
+            });
+        },
+        awardBid: function (parent, _a, context) {
+            var bidId = _a.bidId, userId = _a.userId;
+            return __awaiter(void 0, void 0, void 0, function () {
+                var awardedBid;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0: return [4 /*yield*/, awardBid(bidId, userId, context.req)];
+                        case 1:
+                            awardedBid = _b.sent();
+                            return [2 /*return*/, awardedBid];
                     }
                 });
             });

@@ -1,8 +1,12 @@
 import { IResolvers } from "apollo-server-express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs"
+
 import tokenUtils from "./utils/token.util";
 import Bid from "./models/bid.model";
+import User from "./models/user.model";
+import Account from "./models/account.model";
+import UsersBid from "./models/users_bid.model";
 
 const SECRET = 'SECRET';
 
@@ -21,8 +25,8 @@ interface UserType extends UserToBeCreatedType {
 
 interface BidType extends BidToBeCreatedType {
   id: number,
-  creatorId: number
-  status: string,
+  creatorId: number,
+  status: string
 };
 
 interface BidToBeCreatedType {
@@ -31,77 +35,16 @@ interface BidToBeCreatedType {
   startingPrice: number
 }
 
-interface authenticatedUserType {
+interface AuthenticatedUserType {
   user: UserType,
   token: string
 };
 
-//data source
-const accounts = [
-  {
-    accountNumber: 1,
-    accountHolderFirstName: 'Leroy',
-    accountHolderLastName: 'Sane',
-    amount: 500000
-  },
-  {
-    accountNumber: 2,
-    accountHolderFirstName: 'Thomas',
-    accountHolderLastName: 'Tukils',
-    amount: 2500000
-  },
-  {
-    accountNumber: 3,
-    accountHolderFirstName: 'Collins',
-    accountHolderLastName: 'Muller', // pwd:ManCity token:eyJhbGciOiJIUzI1NiJ9.NQ.iDIkQeIGNPBDihC2GVVoC1bIKjLiQMiEhMN2ebkeMsI
-    amount: 2500
-  },
-  {
-    accountNumber: 12,
-    accountHolderFirstName: 'Ben',
-    accountHolderLastName: 'Orlando',
-    amount: 1000
-  }
-];
-
-
-const bids = [
-  {
-    id: 1,
-    name: 'Paradise',
-    description: 'By Micheal Angelo. High quality imitation',
-    startingPrice: 100000,
-    creatorId: 1,
-    status: 'Open'
-  },
-  {
-    id: 2,
-    name: 'Jackson Gloves',
-    description: 'Micheal Jackson\'s original gold gloves.',
-    startingPrice: 5000000,
-    creatorId: 3,
-    status: 'Open'
-  },
-  {
-    id: 3,
-    status: 'Open',
-    name: 'The Medievals',
-    description: 'Poems collections from various ancient literates.',
-    startingPrice: 30000,
-    creatorId: 2,
-  },
-  {
-    id: 4,
-    name: 'The Mac',
-    description: '1974 Apple laptop. Still stunning.',
-    startingPrice: 2000,
-    creatorId: 4,
-    status: 'Open'
-  }
-];
-
-import User from "./models/user.model";
-import Account from "./models/account.model";
+interface UsersBidType {
+  userId: number,
+  bidId: number,
+  amount: number,
+}
 
 const registerUser = async (user: UserToBeCreatedType) => {
   try {
@@ -174,32 +117,15 @@ const signInUser = async (email: string, password: string) => {
 
 
 
-const accountVerifier = () => {
-  //email check
-
-  //
-
-};
-
-const bidCreator = async (bid: BidType, userId: number) => {
-  // verify sent bid
-
-
-  // create bid and link it to the user
-  const userBid: BidType = { ...bid };
-  userBid.creatorId = userId;
-  userBid.id = bids.length + 1;
-  bids.push(userBid);
-
-  //send bid to user
-  return userBid;
-
+const getAllBids = async () => {
+  const bids = await Bid.query();
+  return bids;
 }
 
 const createBid = async (bid: BidToBeCreatedType, req: Request) => {
   // get creator id
   const userId = tokenUtils.getIdFromToken(req);
-  console.log('User id is ' , userId);
+  console.log('User id is ', userId);
   const newBid = await Bid.query().insert({
     ...bid,
     status: 'Open',
@@ -266,27 +192,106 @@ const deleteBid = async (bidId: number, req: Request) => {
   }
 }
 
+const placeBid = async (usersBid: UsersBidType, req: Request) => {
+  try {
+    console.log('Here 2');
+    const userId = tokenUtils.getIdFromToken(req);
+    //verify account
+    const user = await User.query().findById(userId);
+    const userBalance = await Account.query().select('amount').where('holdersEmail', '=', user.email);
+    if (userBalance[0].amount < usersBid.amount)
+      throw new Error('You do not have enough balance in your account to place this bid.');
 
+    // check the bid status
+    const bidStatus = await Bid.query()
+      .select('status')
+      .where('id', '=', usersBid.bidId);
+    if (bidStatus.length) {
+      console.log('Here 3.1');
+      if (bidStatus[0].status === 'Closed') {
+        console.log('Here 3.2');
+        throw new Error('This bid is closed');
+      }
+      console.log('Here 4');
+      //get the highest bid placed
+      let maxPlaced = await UsersBid.query()
+        .select('bidId')
+        .where('bidId', '=', usersBid.bidId)
+        .groupBy('bidId')
+        .max('amount');
+      ;
+
+      if (maxPlaced.length) {
+        if (maxPlaced[0].max > usersBid.amount)
+          throw new Error('You can place a bid that is lower than the highest bid already placed. Please place a higher bid');
+      }
+      usersBid.userId = userId;
+
+      const placedUserBid = await UsersBid.query().insert({
+        ...usersBid
+      });
+      console.log('Here 5');
+      return placedUserBid;
+    }
+    throw new Error('Bid not found');
+
+    //place bid
+  }
+  catch (error) {
+    throw new Error(error);
+  }
+
+};
+
+const awardBid = async (bidId: number, userId: number, req: Request) => {
+  try {
+    const userId = tokenUtils.getIdFromToken(req);
+    // check the bid status
+    const bidInfo = await Bid.query()
+      .select('status', 'creatorId')
+      .where('id', '=', bidId);
+    if (bidInfo.length) {
+      if (bidInfo[0].status === 'Closed') {
+        throw new Error('This bid can not be awarded because it is closed');
+      }
+      if (bidInfo[0].creatorId !== userId) {
+        throw new Error('This bid is not yours to award');
+      }
+      const placedBid = await UsersBid.query().select('amount').where('userId', '=', userId);
+      if (placedBid.length) {
+        const awardedBid = await Bid.query().patchAndFetchById(bidId, {
+          awardedTo: userId,
+          status: 'Closed'
+        });
+        return awardedBid;
+      }
+      throw new Error('You can not award the bid to someone who has not placed a bid');
+    }
+    throw new Error('Bid not found');
+  }
+  catch (error) {
+    throw new Error(error);
+  }
+};
 
 const resolvers: IResolvers = {
   Query: {
     users: () => users,
-    bids: () => bids
+    bids: async () => getAllBids()
   },
 
   Mutation: {
 
     register: async (parent, { email, password, firstName, lastName, accountNumber, sex }, context) => {
       let newUser: UserToBeCreatedType = { email, password, firstName, lastName, accountNumber, sex };
-      let registeredUserData: authenticatedUserType = await registerUser(newUser);
+      let registeredUserData: AuthenticatedUserType = await registerUser(newUser);
       return registeredUserData;
     },
     //TODO: do signIn
     signIn: async (parent, { email, password }, context) => {
-      let AuthenticatedUserData: authenticatedUserType = await signInUser(email, password);
+      let AuthenticatedUserData: AuthenticatedUserType = await signInUser(email, password);
       return AuthenticatedUserData;
     },
-
 
     createBid: async (parent, { name, description, startingPrice }, context) => {
       let newBid: BidToBeCreatedType = { name, description, startingPrice };
@@ -304,8 +309,21 @@ const resolvers: IResolvers = {
     deleteBid: async (parent, { id }, context) => {
       console.log('Id is of type');
       console.log(typeof id);
-      let deletedBid = await deleteBid(id,context.req);
+      let deletedBid = await deleteBid(id, context.req);
       return deletedBid;
+    },
+
+    placeBid: async (parent, { bidId, amount }, context) => {
+      let bidToPlace: UsersBidType = { bidId, amount, userId: -1 };
+      console.log('Here 1');
+      let palacedBid = await placeBid(bidToPlace, context.req);
+      console.log('Here 6');
+      return palacedBid;
+    },
+
+    awardBid: async (parent, { bidId, userId }, context) => {
+      let awardedBid: Bid = await awardBid(bidId, userId, context.req);
+      return awardedBid;
     }
 
   }

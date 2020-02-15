@@ -3,20 +3,21 @@ import { Model } from "objection";
 class UsersBid extends Model {
     userId!: number;
     bidId!: number;
-    bidAmount! : number;
-
-    static tableName = 'users_bid';
+    amount! : number;
+    max: number;
+    static tableName = 'usersBid';
 
     static jsonSchema = {
         type: 'object',
-        required: ['userId', 'bidId', 'bidAmount' ],
+        required: ['userId', 'bidId', 'amount' ],
 
         properties: {
             userId: { type: 'number' },
             bidId: { type: 'number' },
-            bidAmount: { type: 'number' },
+            amount: { type: 'number' },
         }
     }
+  
     //static relationMappings
 }
 

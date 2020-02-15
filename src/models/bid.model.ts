@@ -7,6 +7,7 @@ class Bid extends Model {
     startingPrice! : number;   
     creatorId! : number;
     status! : string;
+    awardedTo! : number; 
 
     static tableName = 'bid';
 
@@ -20,7 +21,8 @@ class Bid extends Model {
             description: { type: 'string' },
             startingPrice: {type: 'number'},            
             creatorId: {type: 'number'},
-            status: {type: 'string'}
+            status: {type: 'string'},
+            awardedTo : { type: 'number'}
         }
     }
 
