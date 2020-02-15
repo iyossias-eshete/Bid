@@ -146,7 +146,7 @@ const registerUser = async (user: UserToBeCreatedType) => {
   }
 
 }
-
+//TODO: Eager loading, place bid, award bid
 const signInUser = async (email: string, password: string) => {
   //get user
   try {

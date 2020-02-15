@@ -159,6 +159,7 @@ var registerUser = function (user) { return __awaiter(void 0, void 0, void 0, fu
         }
     });
 }); };
+//TODO: Eager loading, place bid, award bid
 var signInUser = function (email, password) { return __awaiter(void 0, void 0, void 0, function () {
     var userMatch, user, validPassword, token, error_2;
     return __generator(this, function (_a) {
@@ -264,17 +265,13 @@ var deleteBid = function (bidId, req) { return __awaiter(void 0, void 0, void 0,
             case 1:
                 bidToDelete = _a.sent();
                 if (!bidToDelete) return [3 /*break*/, 3];
-                console.log('Here1');
                 if (bidToDelete.creatorId !== userId)
                     throw new Error('You are only authorized to delete bids you created');
-                console.log('Here2');
                 return [4 /*yield*/, bid_model_1.default.query().deleteById(bidId)];
             case 2:
                 deleteStatus = _a.sent();
-                console.log('Here3');
                 if (!deleteStatus)
                     throw new Error('Delete failed');
-                console.log('Here4');
                 return [2 /*return*/, bidToDelete];
             case 3: throw new Error('Bid does not exist');
             case 4:
@@ -366,7 +363,6 @@ var resolvers = {
                             return [4 /*yield*/, deleteBid(id, context.req)];
                         case 1:
                             deletedBid = _b.sent();
-                            console.log('Here 5');
                             return [2 /*return*/, deletedBid];
                     }
                 });
