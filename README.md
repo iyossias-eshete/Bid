@@ -1,5 +1,5 @@
 # Bid
-A Graphql, Postgres, Objectionjs implementations of a basic CRUD operation involved in a bidding process. Users will be able to register, signin, create bids, update and delete bids, as well as place bids, and award the bids you have created and others have bided on.
+A Typescript, Graphql, Postgres, Objectionjs implementations of a basic CRUD operation involved in a bidding process. Users will be able to register, signin, create bids, update and delete bids, as well as place bids, and award the bids you have created and others have bided on.
 
 ## Description
 The idea behind this api is that there is a third party api that provides the bank account information for different users. It is being simulated using the Accounts table that was created and seeded in the getting started step. So every user that registered is supposed to have an account. Hence his/her information is validated to existing Accounts and if no match is found, he/she won't be able to proceed with the registration.
