@@ -62,14 +62,11 @@ const registerUser = async (user: UserToBeCreatedType) => {
     // verify user's account number
     const existingAccount = await Account.query().findById(user.accountNumber);
 
-    //TODO: correct message
     if (existingAccount) {
 
       if (existingAccount.holdersEmail !== user.email || existingAccount.holdersFirstName !== user.firstName || existingAccount.holdersLastName !== user.lastName)
-        throw new Error('Account number you specified belongs to someone else');
+        throw new Error('User account exists. Try logging in instead');
 
-      //console.log('I am user spread out');
-      //console.log({...user});
       const registeredUser: UserType = await User.query().insert({
         ...user
       });
@@ -89,7 +86,7 @@ const registerUser = async (user: UserToBeCreatedType) => {
   }
 
 }
-//TODO: Eager loading, place bid, award bid
+
 const signInUser = async (email: string, password: string) => {
   //get user
   try {
@@ -125,14 +122,12 @@ const getAllBids = async () => {
 const createBid = async (bid: BidToBeCreatedType, req: Request) => {
   // get creator id
   const userId = tokenUtils.getIdFromToken(req);
-  console.log('User id is ', userId);
   const newBid = await Bid.query().insert({
     ...bid,
     status: 'Open',
     creatorId: userId
   });
   return newBid;
-  // return a BID TYPE
 };
 
 const updateBid = async (bid: BidType, req: Request) => {
@@ -194,7 +189,6 @@ const deleteBid = async (bidId: number, req: Request) => {
 
 const placeBid = async (usersBid: UsersBidType, req: Request) => {
   try {
-    console.log('Here 2');
     const userId = tokenUtils.getIdFromToken(req);
     //verify account
     const user = await User.query().findById(userId);
@@ -207,15 +201,12 @@ const placeBid = async (usersBid: UsersBidType, req: Request) => {
       .select('status', 'startingPrice')
       .where('id', '=', usersBid.bidId);
     if (bidStatus.length) {
-      console.log('Here 3.1');
       if (bidStatus[0].status === 'Closed') {
-        console.log('Here 3.2');
         throw new Error('This bid is closed');
       }
 
       if (bidStatus[0].startingPrice > usersBid.amount)
         throw new Error('You can not place a bid lower than the starting price');
-      console.log('Here 4');
       //get the highest bid placed
       let maxPlaced = await UsersBid.query()
         .select('bidId')
@@ -233,7 +224,6 @@ const placeBid = async (usersBid: UsersBidType, req: Request) => {
       const placedUserBid = await UsersBid.query().insert({
         ...usersBid
       });
-      console.log('Here 5');
       return placedUserBid;
     }
     throw new Error('Bid not found');
@@ -251,7 +241,6 @@ const awardBid = async (bidId: number, winnersId: number, req: Request) => {
     const userId = tokenUtils.getIdFromToken(req);
     //check the users existence
     const userToBeAwarded = await User.query().findById(winnersId);
-    console.log('User is ');console.log( userToBeAwarded);
     if (!userToBeAwarded)
       throw new Error('The specified user does not exist');
     // check the bid status
@@ -285,7 +274,6 @@ const awardBid = async (bidId: number, winnersId: number, req: Request) => {
 
 const resolvers: IResolvers = {
   Query: {
-    users: () => users,
     bids: async () => getAllBids()
   },
 
@@ -296,7 +284,6 @@ const resolvers: IResolvers = {
       let registeredUserData: AuthenticatedUserType = await registerUser(newUser);
       return registeredUserData;
     },
-    //TODO: do signIn
     signIn: async (parent, { email, password }, context) => {
       let AuthenticatedUserData: AuthenticatedUserType = await signInUser(email, password);
       return AuthenticatedUserData;
@@ -316,17 +303,13 @@ const resolvers: IResolvers = {
     },
 
     deleteBid: async (parent, { id }, context) => {
-      console.log('Id is of type');
-      console.log(typeof id);
       let deletedBid = await deleteBid(id, context.req);
       return deletedBid;
     },
 
     placeBid: async (parent, { bidId, amount }, context) => {
       let bidToPlace: UsersBidType = { bidId, amount, userId: -1 };
-      console.log('Here 1');
       let palacedBid = await placeBid(bidToPlace, context.req);
-      console.log('Here 6');
       return palacedBid;
     },
 
@@ -336,28 +319,6 @@ const resolvers: IResolvers = {
     }
 
   }
-};
-
-const verifyUser = (req: Express.Request) => {
-  //util
-  let userId = undefined;
-  try {
-    const Authorization = req.get('Authorization');
-
-    if (Authorization === undefined)
-      throw new Error('Authorization bearer token not provided.');
-
-    const token = Authorization.replace('Bearer ', '');
-
-    userId = Number(jwt.verify(token, SECRET));
-
-  }
-  catch (error) {
-    throw new Error(error);
-  }
-  // end-of-util
-
-  return userId;
 };
 
 export default resolvers;

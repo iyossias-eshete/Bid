@@ -54,12 +54,7 @@ type UsersBid{
 }
 
    type Query {
-    
-    users: [User]
-    accounts: [Account]
     bids: [Bid]
-    myBid: [Bid] #TODO: bids I've created
-    bidding: [Bid] #TODO: ones I've bid on
   }
 
   type Mutation{
@@ -70,10 +65,6 @@ type UsersBid{
     deleteBid(id: Int!) : Bid
     placeBid( bidId : Int!, amount : Float ) : UsersBid
     awardBid(bidId : Int!, winnersId : Int! ) : Bid
-    #next todo
-    #placeBid( bidId: Int!, price: Float!) : Boolean 
-    #awardBid
-    #id -> name
   }
 `;
 
