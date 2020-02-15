@@ -14,18 +14,25 @@
   "author": "Iyossias Eshete <iyossias777@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "@types/express": "^4.17.2",
+    "@types/jsonwebtoken": "^8.3.7",
+    "@types/pg": "^7.14.1",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@types/bcryptjs": "^2.4.2",
-    "@types/jsonwebtoken": "^8.3.7",
     "apollo-server": "^2.10.0",
     "apollo-server-express": "^2.10.0",
     "bcryptjs": "^2.4.3",
     "copyfiles": "^2.2.0",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "graphql": "^14.6.0",
-    "jsonwebtoken": "^8.5.1"
+    "graphql-import-node": "^0.0.4",
+    "jsonwebtoken": "^8.5.1",
+    "knex": "^0.20.9",
+    "objection": "^2.1.2",
+    "pg": "^7.18.1"
   }
 }
