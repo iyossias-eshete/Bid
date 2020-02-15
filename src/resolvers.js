@@ -234,7 +234,7 @@ var placeBid = function (usersBid, req) { return __awaiter(void 0, void 0, void 
                 if (userBalance[0].amount < usersBid.amount)
                     throw new Error('You do not have enough balance in your account to place this bid.');
                 return [4 /*yield*/, bid_model_1.default.query()
-                        .select('status')
+                        .select('status', 'startingPrice')
                         .where('id', '=', usersBid.bidId)];
             case 3:
                 bidStatus = _a.sent();
@@ -244,6 +244,8 @@ var placeBid = function (usersBid, req) { return __awaiter(void 0, void 0, void 
                     console.log('Here 3.2');
                     throw new Error('This bid is closed');
                 }
+                if (bidStatus[0].startingPrice > usersBid.amount)
+                    throw new Error('You can not place a bid lower than the starting price');
                 console.log('Here 4');
                 return [4 /*yield*/, users_bid_model_1.default.query()
                         .select('bidId')
@@ -271,42 +273,49 @@ var placeBid = function (usersBid, req) { return __awaiter(void 0, void 0, void 
         }
     });
 }); };
-var awardBid = function (bidId, userId, req) { return __awaiter(void 0, void 0, void 0, function () {
-    var userId_1, bidInfo, placedBid, awardedBid, error_6;
+var awardBid = function (bidId, winnersId, req) { return __awaiter(void 0, void 0, void 0, function () {
+    var userId, userToBeAwarded, bidInfo, placedBid, awardedBid, error_6;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 6, , 7]);
-                userId_1 = token_util_1.default.getIdFromToken(req);
+                _a.trys.push([0, 7, , 8]);
+                userId = token_util_1.default.getIdFromToken(req);
+                return [4 /*yield*/, user_model_1.default.query().findById(winnersId)];
+            case 1:
+                userToBeAwarded = _a.sent();
+                console.log('User is ');
+                console.log(userToBeAwarded);
+                if (!userToBeAwarded)
+                    throw new Error('The specified user does not exist');
                 return [4 /*yield*/, bid_model_1.default.query()
                         .select('status', 'creatorId')
                         .where('id', '=', bidId)];
-            case 1:
+            case 2:
                 bidInfo = _a.sent();
-                if (!bidInfo.length) return [3 /*break*/, 5];
+                if (!bidInfo.length) return [3 /*break*/, 6];
                 if (bidInfo[0].status === 'Closed') {
                     throw new Error('This bid can not be awarded because it is closed');
                 }
-                if (bidInfo[0].creatorId !== userId_1) {
+                if (bidInfo[0].creatorId !== userId) {
                     throw new Error('This bid is not yours to award');
                 }
-                return [4 /*yield*/, users_bid_model_1.default.query().select('amount').where('userId', '=', userId_1)];
-            case 2:
+                return [4 /*yield*/, users_bid_model_1.default.query().select('amount').where('userId', '=', winnersId)];
+            case 3:
                 placedBid = _a.sent();
-                if (!placedBid.length) return [3 /*break*/, 4];
+                if (!placedBid.length) return [3 /*break*/, 5];
                 return [4 /*yield*/, bid_model_1.default.query().patchAndFetchById(bidId, {
-                        awardedTo: userId_1,
+                        awardedTo: winnersId,
                         status: 'Closed'
                     })];
-            case 3:
+            case 4:
                 awardedBid = _a.sent();
                 return [2 /*return*/, awardedBid];
-            case 4: throw new Error('You can not award the bid to someone who has not placed a bid');
-            case 5: throw new Error('Bid not found');
-            case 6:
+            case 5: throw new Error('You can not award the bid to someone who has not placed a bid');
+            case 6: throw new Error('Bid not found');
+            case 7:
                 error_6 = _a.sent();
                 throw new Error(error_6);
-            case 7: return [2 /*return*/];
+            case 8: return [2 /*return*/];
         }
     });
 }); };
@@ -418,12 +427,12 @@ var resolvers = {
             });
         },
         awardBid: function (parent, _a, context) {
-            var bidId = _a.bidId, userId = _a.userId;
+            var bidId = _a.bidId, winnersId = _a.winnersId;
             return __awaiter(void 0, void 0, void 0, function () {
                 var awardedBid;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
-                        case 0: return [4 /*yield*/, awardBid(bidId, userId, context.req)];
+                        case 0: return [4 /*yield*/, awardBid(bidId, winnersId, context.req)];
                         case 1:
                             awardedBid = _b.sent();
                             return [2 /*return*/, awardedBid];

@@ -69,7 +69,7 @@ type UsersBid{
     updateBid(id: Int!, name : String, description : String, startingPrice: Float, status : BidStatus ) : Bid
     deleteBid(id: Int!) : Bid
     placeBid( bidId : Int!, amount : Float ) : UsersBid
-    awardBid(bidId : Int!, userId : Int! ) : Bid
+    awardBid(bidId : Int!, winnersId : Int! ) : Bid
     #next todo
     #placeBid( bidId: Int!, price: Float!) : Boolean 
     #awardBid

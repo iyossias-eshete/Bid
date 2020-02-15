@@ -204,7 +204,7 @@ const placeBid = async (usersBid: UsersBidType, req: Request) => {
 
     // check the bid status
     const bidStatus = await Bid.query()
-      .select('status')
+      .select('status', 'startingPrice')
       .where('id', '=', usersBid.bidId);
     if (bidStatus.length) {
       console.log('Here 3.1');
@@ -212,6 +212,9 @@ const placeBid = async (usersBid: UsersBidType, req: Request) => {
         console.log('Here 3.2');
         throw new Error('This bid is closed');
       }
+
+      if (bidStatus[0].startingPrice > usersBid.amount)
+        throw new Error('You can not place a bid lower than the starting price');
       console.log('Here 4');
       //get the highest bid placed
       let maxPlaced = await UsersBid.query()
@@ -243,13 +246,19 @@ const placeBid = async (usersBid: UsersBidType, req: Request) => {
 
 };
 
-const awardBid = async (bidId: number, userId: number, req: Request) => {
+const awardBid = async (bidId: number, winnersId: number, req: Request) => {
   try {
     const userId = tokenUtils.getIdFromToken(req);
+    //check the users existence
+    const userToBeAwarded = await User.query().findById(winnersId);
+    console.log('User is ');console.log( userToBeAwarded);
+    if (!userToBeAwarded)
+      throw new Error('The specified user does not exist');
     // check the bid status
     const bidInfo = await Bid.query()
       .select('status', 'creatorId')
       .where('id', '=', bidId);
+
     if (bidInfo.length) {
       if (bidInfo[0].status === 'Closed') {
         throw new Error('This bid can not be awarded because it is closed');
@@ -257,10 +266,10 @@ const awardBid = async (bidId: number, userId: number, req: Request) => {
       if (bidInfo[0].creatorId !== userId) {
         throw new Error('This bid is not yours to award');
       }
-      const placedBid = await UsersBid.query().select('amount').where('userId', '=', userId);
+      const placedBid = await UsersBid.query().select('amount').where('userId', '=', winnersId);
       if (placedBid.length) {
         const awardedBid = await Bid.query().patchAndFetchById(bidId, {
-          awardedTo: userId,
+          awardedTo: winnersId,
           status: 'Closed'
         });
         return awardedBid;
@@ -321,8 +330,8 @@ const resolvers: IResolvers = {
       return palacedBid;
     },
 
-    awardBid: async (parent, { bidId, userId }, context) => {
-      let awardedBid: Bid = await awardBid(bidId, userId, context.req);
+    awardBid: async (parent, { bidId, winnersId }, context) => {
+      let awardedBid: Bid = await awardBid(bidId, winnersId, context.req);
       return awardedBid;
     }
 
