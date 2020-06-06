@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "apollo-server": "^2.10.0",
-    "apollo-server-express": "^2.10.0",
+    "apollo-server-express": "^2.14.2",
     "bcryptjs": "^2.4.3",
     "copyfiles": "^2.2.0",
     "dotenv": "^8.2.0",
