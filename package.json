@@ -27,7 +27,7 @@
     "bcryptjs": "^2.4.3",
     "copyfiles": "^2.2.0",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "graphql": "^14.6.0",
     "graphql-import-node": "^0.0.4",
     "jsonwebtoken": "^8.5.1",
