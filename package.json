@@ -31,7 +31,7 @@
     "graphql": "^14.6.0",
     "graphql-import-node": "^0.0.4",
     "jsonwebtoken": "^8.5.1",
-    "knex": "^0.20.9",
+    "knex": "^2.4.0",
     "objection": "^2.1.2",
     "pg": "^7.18.1"
   }
